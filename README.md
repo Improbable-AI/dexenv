@@ -6,6 +6,9 @@ This is the codebase for [Visual Dexterity: In-Hand Reorientation of Novel and C
 
 ### [[Project Page]](https://taochenshh.github.io/projects/visual-dexterity), [[arXiv]](https://arxiv.org/abs/2211.11744)
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10039110.svg)](https://doi.org/10.5281/zenodo.10039110)
+
+
 ## :books: Citation
 
 ```
@@ -151,7 +154,7 @@ python rnn.py resume_id=<wandb exp ID> -cn=test_dclaw_rptd
 
 ## :rocket: Pre-trained models
 
-We provide the pre-trained models for both the teacher and the student (stage 2) in `dexenv/expert/artifacts`.
+We provide the pre-trained models for both the teacher and the student (stage 2) in `dexenv/expert/artifacts`. The models were trained using Isaac Gym preview 3.
 
 ```
 # to see the teacher pretrained model
