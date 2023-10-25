@@ -1,0 +1,71 @@
+defaults:
+  - dclaw.yaml
+  - _self_
+
+alg:
+  env_name: DclawFakePTD
+  expert_path: expert/artifacts/teacher/train-model.pt
+  batch_size: 40
+  num_envs: 400
+  num_batches: null
+  train_rollout_steps: 80
+  traj_keys_in_cpu: [ 'ob', 'action', 'reward', 'done', 'true_done', 'state' ]
+  opt_epochs: 4
+  max_grad_norm: 5.
+  reset_first_in_rollout: True
+  std_cond_in: True
+  loss: 'mle'
+  decay_lr: True
+  deque_size: 1800
+  run_eval: True
+  det_eval: True
+  sto_eval: False
+  sample_action: True
+  lr: 0.0003
+
+task:
+  env:
+    loadCADPTD: True
+    name: DclawFakePTD
+  task:
+    randomization_params:
+      frequency: 240
+
+
+vision:
+  clip_action: False
+  clip_eps: 0.
+  encoder: 'impala'
+  embed_dim: 256
+  batch_norm: True
+  layer_norm: False
+  act: gelu
+  mink_act: relu
+  channel_groups: [ 32, 64, 128, 256 ]
+  no_pool: False
+  quantization_size: 0.005
+  speed_optimized: True
+  quantization_mode: 'random'
+  optim_empty_cache: True
+  color_channels: 1
+  pred_rot_dist: True
+  rot_dist_loss_coef: 0.5
+  rot_loss_type: 'mse'
+  ptd_noise: True
+  ptd_noise_prob: 0.4
+  act_in: True
+
+  rnn_features: 256
+  rnn_layers: 1
+
+  roll_thresh: 5.
+  loss_queue: 10
+  roll_min_interval: 100
+  deter_policy: False
+  spatial_shape: [ 150, 150, 130 ]
+
+
+logging:
+  log_interval: 1
+  ckpt_interval: 30
+  eval_interval: 60

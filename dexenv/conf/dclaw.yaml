@@ -1,0 +1,17 @@
+defaults:
+  - hand_default.yaml
+  - _self_
+
+alg:
+  env_name: DclawMultiObjs
+  num_envs: 8000
+  init_logstd: -0.2
+
+task:
+  env:
+    name: DclawMultiObjs
+  obj:
+    dataset: miscnet
+
+logging:
+  eval_interval: 600

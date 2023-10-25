@@ -1,0 +1,19 @@
+defaults:
+  - dclaw_fptd.yaml
+  - _self_
+
+
+alg:
+  env_name: DclawRealPTD
+  batch_size: 20
+  num_envs: 260
+
+task:
+  env:
+    loadCADPTD: True
+    name: DclawRealPTD
+
+logging:
+  wandb:
+    project: dexenv
+  log_interval: 1

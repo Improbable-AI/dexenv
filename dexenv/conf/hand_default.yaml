@@ -1,0 +1,66 @@
+defaults:
+  - task: dclaw
+  - hydra: default
+  - logging: default
+  - _self_
+
+task:
+  env:
+    rew:
+      fallDistance: 0.15
+  sim:
+    device: 'cuda'
+    rl_device: 'cuda'
+
+alg:
+  env_name: DClawBase
+  num_envs: 16384
+  all_in_torch: True
+  env_always_return_true_info: True
+  train_rollout_steps: 8
+  eval_rollout_steps: 120
+  run_eval: False
+  opt_epochs: 12
+  vf_coef: 0.0005
+  clip_range: 0.1
+  num_batches: 4
+  deque_size: 60000
+  tqdm: False
+  max_steps: 100000000000000
+  act: elu
+  max_grad_norm: 1.0
+  seed: 0
+  device: 'cuda'
+  policy_lr: 0.0003
+  value_lr: 0.001
+  smooth_eval_tau: 0.70
+  pretrain_model: null
+  reset_first_in_rollout: False
+  traj_keys_in_cpu: null
+  rew_discount: 0.99
+  gae_lambda: 0.95
+  ent_coef: 0
+
+
+resume: False
+resume_id: null # the run id of wandb run
+resume_to_diff_id: False
+resume_root: null # used to specify the root directory created by the hydra run
+resume_optim: True
+render: False
+test: False
+test_num: 1
+test_dir: null
+test_pretrain: False
+test_eval_best: False
+save_eval_ckpt: False
+save_ob_in_eval: False
+save_test_traj: False
+save_type: null # s for success and f for failure, if 's', it will only save successfull trajectories
+save_best_on_success: False
+
+logging:
+  log_interval: 20
+  ckpt_interval: 600
+  wandb:
+    project: dexenv

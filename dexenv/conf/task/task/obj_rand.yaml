@@ -1,0 +1,85 @@
+randomize: True
+randomization_params:
+  frequency: 1200
+  observations:
+    range: [ 0, .002 ]
+    range_correlated: [ 0, .001 ]
+    operation: "additive"
+    distribution: "gaussian"
+  actions:
+    range: [ 0., .05 ]
+    range_correlated: [ 0, .015 ]
+    operation: "additive"
+    distribution: "gaussian"
+  sim_params:
+    gravity:
+      range: [ 0, 0.4 ]
+      operation: "additive"
+      distribution: "gaussian"
+  actor_params:
+    hand:
+      dof_properties:
+        damping:
+          range: [ 0.8, 1.2 ]
+          operation: "scaling"
+          distribution: "uniform"
+        stiffness:
+          range: [ 0.8, 1.2 ]
+          operation: "scaling"
+          distribution: "uniform"
+      rigid_body_properties:
+        mass:
+          range: [ 0.8, 1.2 ]
+          operation: "scaling"
+          distribution: "uniform"
+          setup_only: True
+      rigid_shape_properties:
+        friction:
+          num_buckets: 100
+          range: [ 0.3, 2.0 ]
+          operation: "scaling"
+          distribution: "uniform"
+          same_for_all: True
+        restitution:
+          num_buckets: 100
+          range: [ 0.0, 2 ]
+          operation: "scaling"
+          distribution: "uniform"
+    object:
+      scale:
+        range: [ 0.95, 1.05 ]
+        operation: "scaling"
+        distribution: "uniform"
+        setup_only: True
+      rigid_body_properties:
+        mass:
+          range: [ 0.3, 1.8 ]
+          operation: "scaling"
+          distribution: "uniform"
+          setup_only: True
+      rigid_shape_properties:
+        friction:
+          num_buckets: 100
+          range: [ 0.3, 2.0 ]
+          operation: "scaling"
+          distribution: "uniform"
+          same_for_all: True
+        restitution:
+          num_buckets: 100
+          range: [ 0.0, 2 ]
+          operation: "scaling"
+          distribution: "uniform"
+    table:
+      rigid_shape_properties:
+        friction:
+          num_buckets: 100
+          range: [ 0.01, 2 ]
+          operation: "scaling"
+          distribution: "uniform"
+          same_for_all: True
+        restitution:
+          num_buckets: 100
+          range: [ 0.0, 2 ]
+          operation: "scaling"
+          distribution: "uniform"
+          same_for_all: True

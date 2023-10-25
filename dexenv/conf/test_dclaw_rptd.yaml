@@ -1,0 +1,16 @@
+defaults:
+  - dclaw_rptd.yaml
+  - _self_
+
+task:
+  headless: False
+  obj:
+    num_objs: 15
+
+alg:
+  num_envs: 100
+  sample_action: False
+
+test: True
+test_num: 3
+

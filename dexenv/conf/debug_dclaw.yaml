@@ -1,0 +1,16 @@
+defaults:
+  - dclaw.yaml
+  - _self_
+
+task:
+  headless: False
+  obj:
+    num_objs: 2
+
+alg:
+  num_envs: 40
+
+logging:
+  wandb:
+    mode: offline
+

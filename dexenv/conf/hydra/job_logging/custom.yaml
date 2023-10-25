@@ -1,0 +1,15 @@
+version: 1
+formatters:
+  colorlog:
+    '()': 'colorlog.ColoredFormatter'
+    format: "[%(cyan)s%(asctime)s%(reset)s][%(log_color)s%(levelname)s%(reset)s] %(message)s"
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: colorlog
+    stream: ext://sys.stdout
+root:
+  level: INFO
+  handlers: [ console ]
+
+disable_existing_loggers: false

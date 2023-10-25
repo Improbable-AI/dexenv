@@ -1,0 +1,19 @@
+defaults:
+  - dclaw_rptd.yaml
+  - _self_
+
+
+task:
+  headless: False
+  obj:
+    num_objs: 2
+
+alg:
+  num_envs: 20
+  batch_size: 10
+  train_rollout_steps: 60
+  opt_epochs: 2
+
+logging:
+  wandb:
+    mode: offline

@@ -1,0 +1,16 @@
+defaults:
+  - dclaw.yaml
+  - _self_
+
+task:
+  headless: False
+  obj:
+    num_objs: 30
+
+alg:
+  num_envs: 500
+  sample_action: False
+
+test: True
+test_num: 10
+

@@ -1,0 +1,140 @@
+defaults:
+  - isaacgym_config.yaml
+  - obj: miscnet
+  - task: obj_rand
+  - _self_
+
+cam:
+  height: 180
+  width: 320
+  hov: 64
+  cuda: True
+  cam_num: 1
+  sample_num: 6000
+  debug_rgb: False
+  visual_render_height: 960 # to save images for visualization purpose
+  visual_render_width: 1280
+
+env:
+  name: DClawBase
+  robot: 'dclaw_4f'
+  numEnvs: ${...alg.num_envs}
+  envSpacing: 0.5
+  episodeLength: 80 # Not used, but would be 8 sec if resetTime is not set
+  resetTime: 10 # Max time till reset, in seconds, if a goal wasn't achieved. Will overwrite the episodeLength if is > 0.
+  enableDebugVis: False
+  aggregateMode: 1
+
+  clipActions: 1.0
+
+  numObservations: null
+  numStates: null
+  numActions: null
+
+  stiffnessScale: 1.0
+  forceLimitScale: 1.0
+  useRelativeControl: True
+  relativeToPrevTarget: False
+  limitAbsoluteCommand: False
+
+
+  startPositionNoise: 0.01
+  startRotationNoise: 0.0
+
+  resetPositionNoise: 0.01
+  resetRotationNoise: 0.0
+  resetDofPosRandomInterval: 0.
+  resetDofVelRandomInterval: 0.0
+
+  # Random forces applied to the object
+  forceScale: 15.0
+  forceProbRange: [ 0.19,0.2 ]
+  forceDecay: 0.99
+  forceDecayInterval: 0.08
+
+  rew:
+    distRewardScale: -10.0
+    ftipRewardScale: -1.
+    rotRewardScale: 1.0
+    rotEps: 0.1
+    reachGoalBonus: 800
+    fallDistance: 0.24
+    fallPenalty: -100
+    successTolerance: 0.4
+    time_due_penalty: False
+    max_dof_vel: ${..dof_vel_pol_limit}
+    action_norm_thresh: 1.0
+    obj_lin_vel_thresh: 0.04
+    obj_ang_vel_thresh: 0.5
+    dof_vel_thresh: 0.25
+    energy_scale: 20
+    clip_energy_reward: True
+    energy_upper_bound: 10
+    timeout_not_done: False
+    rew_scale: 1.
+    pen_tb_contact: False
+    tb_cf_scale: 1
+
+
+  objectType: "block" # can be block, egg or pen
+  observationType: "full" # can be "openai", "full_no_vel", "full","full_state"
+  blockscale: null
+
+  printNumSuccesses: False
+  maxConsecutiveSuccesses: 50
+  averFactor: 0.1 # running mean factor for consecutive successes calculation
+
+  # set to True if you use camera sensors in the environment
+  enableCameraSensors: False
+  loadCADPTD: False
+  robotCadNumPts: 500
+  objCadNumPts: 500
+  vhacd: True
+  stiffness: [ 2.7724128689655174, 3.558619503448275, 3.5586195034482757 ]
+  damping: [ 0.273946924137931, 0.382384248275862, 0.382384248275862 ]
+  tableInitialFriction: 0.5
+  scaleDyn: False
+  dofSpeedScale: 24
+  controlFrequencyInv: 5
+  predDyn: False
+  tactile: False
+  obj_init_delta_pos: null
+  dof_vel_hard_limit: [ 6.55172413793103, 7.758620689655173, 7.7586206896551 ]
+  effort_limit: 2.6
+  dof_vel_pol_limit: 3.5
+  ptd_to_robot_base: True
+
+  soft_control: False
+
+  gated_action: False
+  action_ema: 0.8
+  dof_torque_on: True
+  latency_max_steps: 1
+  sim_latency: False
+  latency_rand_freq: 6000
+  rand_once: False
+  rm_obj_dark_part: False
+  obj_ratio: [ 0.25, 0.7 ]
+  sn_layers: null
+  record_obj_id: False
+
+
+  obj:
+    restitution: 0.5
+    friction: 0.8
+    torsion_friction: 0.1
+    rolling_friction: 0.1
+
+  table:
+    restitution: 0.5
+    friction: 0.5
+    torsion_friction: 0.1
+    rolling_friction: 0.1
+
+  hand:
+    restitution: 0.5
+    friction: 0.8
+    torsion_friction: 0.1
+    rolling_friction: 0.1
+
+

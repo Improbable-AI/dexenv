@@ -1,0 +1,17 @@
+#run:
+#  dir: ${oc.env:PROJECT_ROOT}/outputs/${now:%Y-%m-%d-%H-%M-%S}
+#
+#sweep:
+#  dir: ${oc.env:PROJECT_ROOT}/outputs/mrun-${now:%Y-%m-%d-%H-%M-%S}/
+#  subdir: ${hydra.job.num}_${hydra.job.id}
+
+run:
+  dir: ${oc.env:HYDRA_OUT_ROOT}/outputs/${uuid:}
+
+sweep:
+  dir: ${oc.env:HYDRA_OUT_ROOT}/outputs/${uuid:}
+
+job:
+  env_set:
+    WANDB_START_METHOD: thread
+    WANDB_DIR: '.'

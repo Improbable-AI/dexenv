@@ -1,0 +1,29 @@
+# used to create the object
+name: ShadowHand
+
+physics_engine: physx
+# disables rendering
+headless: True
+rgb_render: False
+
+sim:
+  device: 'cuda'
+  rl_device: 'cuda'
+  dt: 0.01667 # 1/60
+  substeps: 2
+  up_axis: "z"
+  use_gpu_pipeline: True
+  gravity: [ 0.0, 0.0, -9.81 ]
+  physx:
+    num_threads: 8
+    solver_type: 1
+    num_position_iterations: 8
+    num_velocity_iterations: 0
+    max_gpu_contact_pairs: 8388608 # 8*1024*1024
+    num_subscenes: 4
+    contact_offset: 0.002
+    rest_offset: 0.0
+    bounce_threshold_velocity: 0.2
+    max_depenetration_velocity: 1000.0
+    default_buffer_size_multiplier: 5.0
+    contact_collection: 1
