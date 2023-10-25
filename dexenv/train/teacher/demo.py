@@ -79,7 +79,7 @@ def random(cfg: DictConfig):
 def main(cfg: DictConfig):
     set_print_formatting()
     env = create_task_env(cfg)
-    expert_path = dexenv.LIB_PATH.joinpath('expert', 'artifacts', 'teacher', 'train-model.pt')
+    expert_path = dexenv.LIB_PATH.joinpath('pretrained', 'artifacts', 'teacher', 'train-model.pt')
     actor = get_actor(ob_size=env.observation_space['ob'].shape[0], act_dim=env.action_space.shape[0])
     actor.cuda()
     load_expert(actor, expert_path)

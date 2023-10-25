@@ -67,6 +67,10 @@ git clone https://github.com/NVIDIA-Omniverse/IsaacGymEnvs.git
 
 Download the robot and object assets from [here](https://drive.google.com/file/d/187F8caz8unBnrSpU5Bp1PrnKnNUWJ7SG/view?usp=sharing), and unzip it to `dexenv/dexenv/`.
 
+#### Download the pretrained models
+
+Download the pretrained checkpoints from [here](https://drive.google.com/file/d/1dSYyIyKTRkn0P7az4lYElD0oq66x_4HG/view?usp=sharing), and unzip it to `dexenv/dexenv/`.
+
 #### Build the docker image
 ```
 cd dexenv/docker
@@ -163,6 +167,6 @@ python demo.py
 
 # to see the student pretrained model
 cd /workspace/dexenv/dexenv/train/student
-python rnn.py alg.num_envs=20 task.obj.num_objs=10  alg.pretrain_model=/workspace/dexenv/dexenv/expert/artifacts/student/train-model.pt test_pretrain=True test_num=3 -cn=debug_dclaw_rptd
+python rnn.py alg.num_envs=20 task.obj.num_objs=10  alg.pretrain_model=/workspace/dexenv/dexenv/pretrained/artifacts/student/train-model.pt test_pretrain=True test_num=3 -cn=debug_dclaw_rptd
 ```
 

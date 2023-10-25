@@ -4,7 +4,7 @@ defaults:
 
 alg:
   env_name: DclawFakePTD
-  expert_path: expert/artifacts/teacher/train-model.pt
+  expert_path: pretrained/artifacts/teacher/train-model.pt
   batch_size: 40
   num_envs: 400
   num_batches: null
