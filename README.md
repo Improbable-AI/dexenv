@@ -130,6 +130,9 @@ python mlp.py alg.num_envs=20 resume_id=<wandb exp ID> -cn=test_dclaw
 # debug student
 cd /workspace/dexenv/dexenv/train/student
 python rnn.py -cn=debug_dclaw_fptd
+# by default, the command above used the pretrained teacher model you downloaded above, 
+#if you wanna use another teacher model, add `alg.expert_path=<path>`
+python rnn.py alg.expert_path=<path to teacher model> -cn=debug_dclaw_fptd
 
 # training student
 cd /workspace/dexenv/dexenv/train/student
