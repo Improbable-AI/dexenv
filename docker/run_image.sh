@@ -2,7 +2,7 @@
 trap "exit" INT TERM ERR
 trap "kill 0" EXIT
 
-IMAGE=dexenv/dexenv:latest
+IMAGE=improbableailab/dexenv:latest
 
 while getopts i: flag
 do

@@ -32,7 +32,7 @@ def execute_build(args):
 
 
 if __name__ == '__main__':
-    default_image_name = "dexenv/dexenv"
+    default_image_name = "improbableailab/dexenv"
 
     parser = argparse.ArgumentParser()
 
