@@ -53,7 +53,7 @@ Here is how the directory looks like:
 
 ```
 # download packages
-git clone git@github.com:taochenshh/dexenv.git
+git clone git@github.com:Improbable-AI/dexenv.git
 git clone https://github.com/NVIDIA-Omniverse/IsaacGymEnvs.git
 
 # download IsaacGym from: 
