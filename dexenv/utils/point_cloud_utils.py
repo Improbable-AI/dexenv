@@ -42,7 +42,6 @@ class PointCloudGenerator:
                                    device=depth_buffer.device,
                                    dtype=bool)
         valid_depth = depth_buffer[valid_ids]
-        # from IPython import embed; embed()
         uv_one_in_cam = self._uv_one_in_cam[valid_ids]
 
         pts_in_cam = torch.mul(uv_one_in_cam, valid_depth.unsqueeze(-1))

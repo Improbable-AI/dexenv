@@ -4,7 +4,7 @@
 
 This is the codebase for [Visual Dexterity: In-Hand Reorientation of Novel and Complex Object Shapes](https://arxiv.org/abs/2211.11744), accepted by Science Robotics. While we provide the code that uses the D'Claw robot hand, it can be easily adapted to other robot hands.
 
-### [[Project Page]](https://taochenshh.github.io/projects/visual-dexterity), [[arXiv]](https://arxiv.org/abs/2211.11744)
+### [[Project Page]](https://taochenshh.github.io/projects/visual-dexterity), [[arXiv]](https://arxiv.org/abs/2211.11744), [[Github]](https://github.com/Improbable-AI/dexenv)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10039110.svg)](https://doi.org/10.5281/zenodo.10039110)
 
@@ -72,7 +72,12 @@ Download the robot and object assets from [here](https://drive.google.com/file/d
 
 Download the pretrained checkpoints from [here](https://drive.google.com/file/d/1dSYyIyKTRkn0P7az4lYElD0oq66x_4HG/view?usp=sharing), and unzip it to `dexenv/dexenv/`.
 
-#### Build the docker image
+#### Prepare the docker image
+1. You can download a pre-built docker image:
+```
+docker pull improbableailab/dexenv:latest
+```
+2. Or you can build the docker image locally:
 ```
 cd dexenv/docker
 python docker_build.py -f Dockerfile
