@@ -12,11 +12,12 @@ This is the codebase for [Visual Dexterity: In-Hand Reorientation of Novel and C
 ## :books: Citation
 
 ```
-@article{chen2022visual,
+@article{chen2023visual,
     title={Visual Dexterity: In-Hand Reorientation of Novel and Complex Object Shapes},
     author={Chen, Tao and Tippur, Megha and Wu, Siyang and Kumar, Vikash and Adelson, Edward and Agrawal, Pulkit},
-    journal={arXiv preprint arXiv:2211.11744},
-    year={2022}
+    journal={Science Robotics},
+    year={2023},
+    publisher={American Association for the Advancement of Science}
 }
 ```
 
