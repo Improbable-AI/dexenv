@@ -6,7 +6,7 @@ This is the codebase for [Visual Dexterity: In-Hand Reorientation of Novel and C
 
 ### [[Project Page]](https://taochenshh.github.io/projects/visual-dexterity), [[arXiv]](https://arxiv.org/abs/2211.11744), [[Github]](https://github.com/Improbable-AI/dexenv)
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10039110.svg)](https://doi.org/10.5281/zenodo.10039110)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10039109.svg)](https://doi.org/10.5281/zenodo.10039109)
 
 
 ## :books: Citation
