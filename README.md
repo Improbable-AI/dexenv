@@ -4,7 +4,7 @@
 
 This is the codebase for [Visual Dexterity: In-Hand Reorientation of Novel and Complex Object Shapes](https://arxiv.org/abs/2211.11744), accepted by Science Robotics. While we provide the code that uses the D'Claw robot hand, it can be easily adapted to other robot hands.
 
-### [[Project Page]](https://taochenshh.github.io/projects/visual-dexterity), [[arXiv]](https://arxiv.org/abs/2211.11744), [[Github]](https://github.com/Improbable-AI/dexenv)
+### [[Project Page]](https://taochenshh.github.io/projects/visual-dexterity), [[Science Robotics]](https://www.science.org/doi/10.1126/scirobotics.adc9244), [[arXiv]](https://arxiv.org/abs/2211.11744), [[Github]](https://github.com/Improbable-AI/dexenv)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10039109.svg)](https://doi.org/10.5281/zenodo.10039109)
 
@@ -13,11 +13,16 @@ This is the codebase for [Visual Dexterity: In-Hand Reorientation of Novel and C
 
 ```
 @article{chen2023visual,
-    title={Visual Dexterity: In-Hand Reorientation of Novel and Complex Object Shapes},
-    author={Chen, Tao and Tippur, Megha and Wu, Siyang and Kumar, Vikash and Adelson, Edward and Agrawal, Pulkit},
-    journal={Science Robotics},
-    year={2023},
-    publisher={American Association for the Advancement of Science}
+    author = {Tao Chen  and Megha Tippur  and Siyang Wu  and Vikash Kumar  and Edward Adelson  and Pulkit Agrawal },
+    title = {Visual dexterity: In-hand reorientation of novel and complex object shapes},
+    journal = {Science Robotics},
+    volume = {8},
+    number = {84},
+    pages = {eadc9244},
+    year = {2023},
+    doi = {10.1126/scirobotics.adc9244},
+    URL = {https://www.science.org/doi/abs/10.1126/scirobotics.adc9244},
+    eprint = {https://www.science.org/doi/pdf/10.1126/scirobotics.adc9244},
 }
 ```
 
