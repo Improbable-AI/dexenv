@@ -71,11 +71,11 @@ git clone https://github.com/NVIDIA-Omniverse/IsaacGymEnvs.git
 
 #### Download the assets
 
-Download the robot and object assets from [here](https://drive.google.com/file/d/187F8caz8unBnrSpU5Bp1PrnKnNUWJ7SG/view?usp=sharing), and unzip it to `dexenv/dexenv/`.
+Download the robot and object assets from [here](https://huggingface.co/datasets/taochenshh/dexenv/blob/main/assets.zip), and unzip it to `dexenv/dexenv/`.
 
 #### Download the pretrained models
 
-Download the pretrained checkpoints from [here](https://drive.google.com/file/d/1dSYyIyKTRkn0P7az4lYElD0oq66x_4HG/view?usp=sharing), and unzip it to `dexenv/dexenv/`.
+Download the pretrained checkpoints from [here](https://huggingface.co/datasets/taochenshh/dexenv/blob/main/pretrained.zip), and unzip it to `dexenv/dexenv/`.
 
 #### Prepare the docker image
 1. You can download a pre-built docker image:
