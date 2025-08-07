@@ -1,0 +1,19 @@
+defaults:
+  - dclaw_hardware.yaml
+  - _self_
+
+
+task:
+  headless: False
+  obj:
+    num_objs: 1
+
+alg:
+  num_envs: 1
+  batch_size: 1
+  train_rollout_steps: 60
+  opt_epochs: 2
+
+logging:
+  wandb:
+    mode: offline

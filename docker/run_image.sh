@@ -26,12 +26,3 @@ wandb docker-run -it \
     -e NVIDIA_VISIBLE_DEVICES=all \
     --net=host \
     ${IMAGE}
-
-
-
-
-
-
-
-
-
