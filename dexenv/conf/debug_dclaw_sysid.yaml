@@ -1,0 +1,23 @@
+defaults:
+  - dclaw_sysid.yaml
+  - _self_
+
+
+task:
+  headless: False
+  obj:
+    num_objs: 1
+  env:
+    stiffness: [2.5, 3.5, 3.5, 2.5, 3.5, 3.5, 2.5, 3.5, 3.5, 2.5, 3.5, 3.5]
+    damping: [0.27, 0.38, 0.38, 0.27, 0.38, 0.38, 0.27, 0.38, 0.38, 0.27, 0.38, 0.38]
+
+alg:
+  num_envs: 1
+  batch_size: 1
+  train_rollout_steps: 60
+  eval_rollout_steps: 120
+  opt_epochs: 2
+
+logging:
+  wandb:
+    mode: offline

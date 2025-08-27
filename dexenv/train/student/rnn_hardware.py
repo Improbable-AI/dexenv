@@ -39,6 +39,8 @@ def main(cfg: DictConfig):
 
     env = create_task_env(cfg, quantization_size=cfg.vision.quantization_size)
 
+    env.visualize = False
+
     if cfg.test:
         expert_actor = None
     else:
@@ -97,7 +99,7 @@ def main(cfg: DictConfig):
                                                              **action_kwargs)
         # print("Predicted rotation distance : ", action_info['pred_rot_dist'])
 
-        print("Joint commands / action : ", action)
+        print("Joint commands degrees : ", np.rad2deg(action.cpu().numpy()), flush=True)
 
         next_ob, reward, done, info = step_hardware(env, action)
 
@@ -126,6 +128,9 @@ def step_hardware(env, actions: torch.Tensor) -> Tuple[Dict[str, torch.Tensor], 
     if env.dr_randomizations.get('actions', None):
         actions = env.dr_randomizations['actions']['noise_lambda'](actions)
     action_tensor = torch.clamp(actions, -env.clip_actions, env.clip_actions)
+
+    print("Joint commands degrees CLAMPED : ", np.rad2deg(action_tensor.cpu().numpy()), flush=True)
+
     # apply actions
     env.pre_physics_step(action_tensor)
     
@@ -200,11 +205,12 @@ def compute_ptd_observations(env):
     pts = env.ptd_cam.get_point_cloud(filter_func=filter_hand_base)
     env.gym.end_access_image_tensors(env.sim)
 
-    plot_pts = pts.squeeze(0)
-    plot_pts = plot_pts.cpu().numpy()
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(plot_pts)
-    o3d.visualization.draw_geometries([pcd])
+    if env.visualize:
+        plot_pts = pts.squeeze(0)
+        plot_pts = plot_pts.cpu().numpy()
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(plot_pts)
+        o3d.visualization.draw_geometries([pcd])
 
     if env.cfg.env.ptd_to_robot_base:
         base_link_pos = env.rigid_body_states[:, env.base_link_handle][..., :3] # May not have to change this using calibration
@@ -224,11 +230,12 @@ def compute_ptd_observations(env):
 
         pts = base_link_pose_transform.transform_points(points=pts)
 
-    plot_pts = pts.squeeze(0)
-    plot_pts = plot_pts.cpu().numpy()
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(plot_pts)
-    o3d.visualization.draw_geometries([pcd])
+    if env.visualize:
+        plot_pts = pts.squeeze(0)
+        plot_pts = plot_pts.cpu().numpy()
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(plot_pts)
+        o3d.visualization.draw_geometries([pcd])
 
     env.hand_link_pos = env.rigid_body_states[:, env.hand_body_handles][:, :, 0:3] # REPLACE : State from the simulator
     env.hand_link_quat = env.rigid_body_states[:, env.hand_body_handles][:, :, 3:7] # REPLACE : State from the simulator - xyzw quat
@@ -251,30 +258,34 @@ def compute_ptd_observations(env):
     env.se3_T_buf[:, 3, :3] = trans.view(-1, 3)
     transform = p3dtf.Transform3d(matrix=env.se3_T_buf)
 
-    plot_pts = env.scene_cad_ptd.reshape(-1, 3)
-    plot_pts = plot_pts.cpu().numpy()
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(plot_pts)
-    o3d.visualization.draw_geometries([pcd])
+    if env.visualize:
+        plot_pts = env.scene_cad_ptd.reshape(-1, 3)
+        plot_pts = plot_pts.cpu().numpy()
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(plot_pts)
+        o3d.visualization.draw_geometries([pcd])
 
     cad_ptd_obs = transform.transform_points(points=env.scene_cad_ptd)
     cad_ptd_obs = cad_ptd_obs.view(env.num_envs, -1, 3)
 
-    plot_pts = cad_ptd_obs.reshape(-1, 3)
-    plot_pts = plot_pts.cpu().numpy()
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(plot_pts)
-    o3d.visualization.draw_geometries([pcd])
+    if env.visualize:
+        plot_pts = cad_ptd_obs.reshape(-1, 3)
+        plot_pts = plot_pts.cpu().numpy()
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(plot_pts)
+        o3d.visualization.draw_geometries([pcd])
 
     ptd_obs = torch.cat((pts, cad_ptd_obs), dim=-2)
 
-    plot_pts = ptd_obs.reshape(-1, 3)
-    plot_pts = plot_pts.cpu().numpy()
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(plot_pts)
-    o3d.visualization.draw_geometries([pcd])
+    # final_ptd = ptd_obs.reshape(-1, 3).cpu().numpy()
+    # np.savetxt("/workspace/ros_code/final_ptd_sim.xyz", final_ptd)
 
-    exit()
+    if env.visualize:
+        plot_pts = ptd_obs.reshape(-1, 3)
+        plot_pts = plot_pts.cpu().numpy()
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(plot_pts)
+        o3d.visualization.draw_geometries([pcd])
 
     if env.quantization_size is not None:
         ptd_obs = ptd_obs / env.quantization_size
