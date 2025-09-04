@@ -12,7 +12,7 @@ task:
     damping: [0.27, 0.38, 0.38, 0.27, 0.38, 0.38, 0.27, 0.38, 0.38, 0.27, 0.38, 0.38]
 
 alg:
-  num_envs: 1
+  num_envs: 401
   batch_size: 1
   train_rollout_steps: 60
   eval_rollout_steps: 120

@@ -504,23 +504,6 @@ class DClawBaseSysID(VecTask):
             else:
                 props[prop_name] = np.array(val)
 
-        if self.cfg["env"]["dof_vel_hard_limit"] is not None:
-            vel_hard_limit = self.cfg["env"]["dof_vel_hard_limit"] if not self.cfg.env.soft_control else self.cfg["env"]["soft_dof_vel_hard_limit"]
-            print(f'Setting DOF velocity limit to:{vel_hard_limit}')
-            set_dof_prop(dclaw_dof_props, 'velocity', vel_hard_limit)
-        if self.cfg["env"]["effort_limit"] is not None:
-            effort_limit = self.cfg["env"]["effort_limit"] if not self.cfg.env.soft_control else self.cfg["env"]["soft_effort_limit"]
-            print(f'Setting DOF effort limit to:{effort_limit}')
-            set_dof_prop(dclaw_dof_props, 'effort', effort_limit)
-        if self.cfg["env"]["stiffness"] is not None:
-            stiffness = self.cfg["env"]["stiffness"] if not self.cfg.env.soft_control else self.cfg["env"]["soft_stiffness"]
-            print(f'Setting stiffness to:{stiffness}')
-            set_dof_prop(dclaw_dof_props, 'stiffness', stiffness)
-        if self.cfg["env"]["damping"] is not None:
-            damping = self.cfg["env"]["damping"] if not self.cfg.env.soft_control else self.cfg["env"]["soft_damping"]
-            print(f'Setting damping to:{damping}')
-            set_dof_prop(dclaw_dof_props, 'damping', damping)
-
         self.dclaw_dof_lower_limits = []
         self.dclaw_dof_upper_limits = []
 
@@ -554,6 +537,26 @@ class DClawBaseSysID(VecTask):
             p.rolling_friction = self.cfg.env.hand.rolling_friction
             p.restitution = self.cfg.env.hand.restitution
         self.gym.set_asset_rigid_shape_properties(dclaw_asset, dclaw_asset_props)
+
+        if self.cfg["env"]["dof_vel_hard_limit"] is not None:
+            vel_hard_limit = self.cfg["env"]["dof_vel_hard_limit"] if not self.cfg.env.soft_control else self.cfg["env"]["soft_dof_vel_hard_limit"]
+            print(f'Setting DOF velocity limit to:{vel_hard_limit}')
+            set_dof_prop(dclaw_dof_props, 'velocity', vel_hard_limit)
+        if self.cfg["env"]["effort_limit"] is not None:
+            effort_limit = self.cfg["env"]["effort_limit"] if not self.cfg.env.soft_control else self.cfg["env"]["soft_effort_limit"]
+            print(f'Setting DOF effort limit to:{effort_limit}')
+            set_dof_prop(dclaw_dof_props, 'effort', effort_limit)
+        # if self.cfg["env"]["stiffness"] is not None:
+        #     # Ignore config
+        #     # stiffness = self.cfg["env"]["stiffness"] if not self.cfg.env.soft_control else self.cfg["env"]["soft_stiffness"]
+        #     print(f'Setting stiffness to:{stiffness}')
+        #     set_dof_prop(dclaw_dof_props, 'stiffness', stiffness)
+        # if self.cfg["env"]["damping"] is not None:
+        #     # Ignore config
+        #     # damping = self.cfg["env"]["damping"] if not self.cfg.env.soft_control else self.cfg["env"]["soft_damping"]
+        #     print(f'Setting damping to:{damping}')
+        #     set_dof_prop(dclaw_dof_props, 'damping', damping)
+
         return dclaw_asset, dclaw_dof_props
 
     def get_object_start_pose(self, dclaw_start_pose):

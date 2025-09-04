@@ -56,7 +56,7 @@ class DclawSysID(DclawMultiObjsSysID):
         self.se3_T_buf = torch.eye(4, device=self.device).repeat(self.num_envs * (len(self.ptd_body_links) + 1),
                                                                  1,
                                                                  1)
-
+    
     def _create_envs(self, num_envs, spacing, num_per_row):
         lower = gymapi.Vec3(-spacing, -spacing, 0.0)
         upper = gymapi.Vec3(spacing, spacing, spacing)
@@ -73,7 +73,7 @@ class DclawSysID(DclawMultiObjsSysID):
         dclaw_start_pose = self.get_dclaw_start_pose()
         # object_start_pose = self.get_object_start_pose(dclaw_start_pose)
         # goal_start_pose = self.get_goal_object_start_pose(object_start_pose=object_start_pose)
-
+        
         self.dclaws = []
         self.envs = []
 
@@ -99,13 +99,18 @@ class DclawSysID(DclawMultiObjsSysID):
         # env_obj_ids = []
         # self.object_ptds = []
         # self.object_handles = []
+
+        grid_size = int(np.sqrt(self.num_envs))
+        stiffness_array = np.linspace(2, 4, grid_size)
+        damping_array = np.linspace(0.1, 0.5, grid_size)
+        
         for i in range(self.num_envs):
         #     obj_asset_id = i % num_object_assets
         #     env_obj_ids.append(object_ids[obj_asset_id])
             env_ptr = self.gym.create_env(
                 self.sim, lower, upper, num_per_row
             )
-        #     self.object_ptds.append(object_ptds[obj_asset_id])
+            # self.object_ptds.append(object_ptds[obj_asset_id])
 
             # if self.aggregate_mode >= 1:
             #     # compute aggregate size
@@ -114,12 +119,40 @@ class DclawSysID(DclawMultiObjsSysID):
             #     max_agg_bodies = self.num_dclaw_bodies + obj_num_bodies * 2 + 1
             #     max_agg_shapes = self.num_dclaw_shapes + obj_num_shapes * 2 + 1
             #     self.gym.begin_aggregate(env_ptr, max_agg_bodies, max_agg_shapes, True)
+            
+            stiffness_index = i // grid_size
+            damping_index = i % grid_size
 
+            print(f"ENVIRONMENT : {i}")
+            stiffness = [stiffness_array[stiffness_index]] * 12
+            damping = [damping_array[damping_index]] * 12
+
+            def set_dof_prop(props, prop_name, val):
+                if np.isscalar(val):
+                    props[prop_name].fill(val)
+                elif len(val) == 3:
+                    props[prop_name] = np.array(list(val) * int(len(props[prop_name]) / 3))
+                else:
+                    props[prop_name] = np.array(val)
+            
+            if self.cfg["env"]["stiffness"] is not None:
+                # Ignore config
+                # stiffness = self.cfg["env"]["stiffness"] if not self.cfg.env.soft_control else self.cfg["env"]["soft_stiffness"]
+                print(f'Setting stiffness to:{stiffness}')
+                set_dof_prop(dclaw_dof_props, 'stiffness', stiffness)
+
+            if self.cfg["env"]["damping"] is not None:
+                # Ignore config
+                # damping = self.cfg["env"]["damping"] if not self.cfg.env.soft_control else self.cfg["env"]["soft_damping"]
+                print(f'Setting damping to:{damping}')
+                set_dof_prop(dclaw_dof_props, 'damping', damping)
+            
             self.create_hand_actor(env_ptr=env_ptr,
                                    dclaw_asset=dclaw_asset,
                                    dclaw_start_pose=dclaw_start_pose,
                                    dclaw_dof_props=dclaw_dof_props,
                                    env_id=i)
+            
             # add object
             # object_handle = self.gym.create_actor(env_ptr, object_assets[obj_asset_id],
             #                                       object_start_pose, "object", i, 0, 1)
@@ -164,6 +197,7 @@ class DclawSysID(DclawMultiObjsSysID):
             # table_handle = self.gym.create_actor(env_ptr, table_asset, table_pose, "table", i, 0)
             # self.gym.set_rigid_body_color(env_ptr, table_handle, 0, gymapi.MESH_VISUAL,
             #                               gymapi.Vec3(180 / 255., 180 / 255., 180 / 255.))
+
             if self.aggregate_mode > 0:
                 self.gym.end_aggregate(env_ptr)
 

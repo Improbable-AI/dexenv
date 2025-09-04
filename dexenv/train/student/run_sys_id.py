@@ -28,7 +28,11 @@ from dexenv.utils.create_task_env import create_task_env
 from dexenv.envs.dclaw_base_sysid import DClawBaseSysID
 from dexenv.utils.torch_utils import quat_xyzw_to_wxyz
 
+import matplotlib.pyplot as plt
+
 from isaacgymenvs.utils.torch_jit_utils import to_torch, quat_apply
+
+PLOT_FIGURES = False
 
 @hydra.main(config_path=dexenv.PROJECT_ROOT.joinpath('conf').as_posix(),
             config_name="debug_dclaw_sysid")
@@ -79,10 +83,21 @@ def main(cfg: DictConfig):
     signal_types = ["step", "sinusoidal"]
     frequencies = [0.05, 0.2, 0.5, 1, 1.5]
 
+    def send_dclaw_home():
+        joint_command = torch.zeros(act_dim, device=env.device)
+        for i in range(24):
+            step_hardware(env, joint_command)
+    
+    signals["num_envs"] = env.num_envs
+
+    grid_size = int(np.sqrt(env.num_envs))
+    stiffness_array = np.linspace(2, 4, grid_size)
+    damping_array = np.linspace(0.1, 0.5, grid_size)
+    
     for index, actuator in enumerate(actuators):
             print(index, actuator)
-            signals[actuator]["hardware_joint_states"] = {}
-
+            signals[actuator]["simulator_joint_states"] = {}
+            
             if index % 3 == 0:
                 # The top motor can only go upto ~0.65 radian in the positive direction
                 amplitudes = [0.2, 0.35, 0.55]
@@ -90,81 +105,128 @@ def main(cfg: DictConfig):
                 amplitudes = [0.5, 1.0, 1.5]
 
             for signal_type in signal_types:
-                signals[actuator]["hardware_joint_states"][signal_type] = {}
+                signals[actuator]["simulator_joint_states"][signal_type] = {}
                 
                 if signal_type == "step":
                     for amplitude in amplitudes:
                         
-                        print(f"Finger Index : {actuator}, Signal type : {signal_type}, Amplitude :{amplitude}")
+                        print(f"Finger Index:{actuator}, Signal type:{signal_type}, Amplitude:{amplitude}")
                         
-                        # print(signals[actuator])
                         signal = signals[actuator]["input_joint_commands"][signal_type][f"{amplitude}"]
-                        signals[actuator]["hardware_joint_states"][signal_type][f"{amplitude}"] = {}
+                        signals[actuator]["simulator_joint_states"][signal_type][f"{amplitude}"] = {}
                         
-                        simulator_states = []
+                        send_dclaw_home()
+
+                        sim_states = []
 
                         start_time = time.perf_counter()
-                        for t in range(len(signal)):
-                            print(t)
+                        for t in range(0, len(signal), 2):
+                            # print(t)
                             joint_command = torch.zeros(act_dim, device=env.device)
-                            print("joint command :", joint_command)
-                            # joint_command[index] = signal[t]
+
+                            for env_index in range(env.num_envs):
+                                joint_command[index + env_index * 12] = signal[t]
 
                             # Send command to step the simulator for 1/12.0 second
                             next_ob, reward, done, info = step_hardware(env, joint_command)
 
-                            print(env.dclaw_dof_pos)
-                            # print("current state :", next_ob["state"])
-                        
-                        break
+                            current_state = env.dclaw_dof_pos.cpu().numpy()
+                            sim_states.append(current_state)
 
-                            # Log the current state
-                            # simulator_states.append(latest_state)
+                        if PLOT_FIGURES:
+                            timesteps = np.arange(0, 1 + 2, 1.0/12.0)
+                            sim_states = np.array(sim_states)
+                            
+                            for sim_num in range(env.num_envs):
 
-    # for t in tqdm(range(time_steps), desc='Step', disable=False):
-    #     # if render:
-    #     #     env.render()
-    #     #     if sleep_time > 0:
-    #     #         time.sleep(sleep_time)
+                                stiffness_index = sim_num // grid_size
+                                damping_index = sim_num % grid_size
 
-    #     # This contains lines that assign a value to pred_rot_distance 
-    #     # but it seems the model isn't currently outputting that. Need to understand where it comes from.
-    #     # The "done" flag is currently set based on privileged information and not pred_rot_dist.
-    #     # action, action_info, hidden_state = agent.get_action(ob,
-    #     #                                                      sample=sample,
-    #     #                                                      hidden_state=hidden_state,
-    #     #                                                      get_action_only=evaluation,
-    #     #                                                      **action_kwargs)
-    #     # print("Predicted rotation distance : ", action_info['pred_rot_dist'])
+                                print(f"ENVIRONMENT : {sim_num}")
+                                stiffness = stiffness_array[stiffness_index]
+                                damping = damping_array[damping_index]
 
-    #     # print("Joint commands degrees : ", np.rad2deg(action.cpu().numpy()), flush=True)
+                                plt.figure()
+                                plt.plot(timesteps, downsample(signal), "--", label="Commanded Signal")
+                                plt.plot(timesteps, sim_states[:, sim_num, index], label=f"Simulator #{sim_num} Trajectory")
+                                
+                                plt.xlabel("Time (s)")
+                                plt.ylabel("Position (in radian)")
 
-    #     action = torch.zeros(act_dim, device=env.device)
+                                plt.title(f"Finger Index : {actuator}, Signal type : {signal_type}, Amplitude :{amplitude}, \n stiffness:{stiffness}, damping:{damping}")
+                                plt.legend()
 
-    #     effective_t = t - 12
-    #     # Wait for 1 second before sending signals
-    #     if effective_t >= 0:
-    #         # Generate signal -- get this from hardware sys id code
-    #         pass
-    #         # Set the action variable for the current actuator
+                                plt.show()
+                                plt.close()
 
-    #     # Step -- Send signal by setting target dof pose
-    #     next_ob, reward, done, info = step_hardware(env, action) # This takes 1/12.0 seconds of simulator time.
+                        signals[actuator]["simulator_joint_states"][signal_type][f"{amplitude}"]["positions"] = np.array(sim_states)
 
-    #     # Get current state for the current actuator and store it.
+                elif signal_type == "sinusoidal":
+                    for amplitude in amplitudes:
+                        for freq in frequencies:
+                            
+                            print(f"Finger Index : {actuator}, Signal type : {signal_type}, Amplitude :{amplitude}, Freq : {freq}")
 
+                            signal = signals[actuator]["input_joint_commands"][signal_type][f"{amplitude}_{freq}"]
+                            signals[actuator]["simulator_joint_states"][signal_type][f"{amplitude}_{freq}"] = {}
+                            
+                            send_dclaw_home()
 
-    #     next_ob = deepcopy(next_ob)
-    #     done = deepcopy(done)
-    #     ob = next_ob
+                            sim_states = []
+                            for t in range(0, len(signal), 2):
+                                # print(t)
+                                joint_command = torch.zeros(act_dim, device=env.device)
+                                for env_index in range(env.num_envs):
+                                    joint_command[index + env_index * 12] = signal[t]
+                                # print("joint command :", joint_command)
 
-    #     # if return_on_done and done:
-    #     #     break
+                                # Send command to step the simulator for 1/12.0 second
+                                next_ob, reward, done, info = step_hardware(env, joint_command)
+                                current_state = env.dclaw_dof_pos.cpu().numpy()
+                                sim_states.append(current_state)
+
+                            if PLOT_FIGURES:
+                                timesteps = np.arange(0, 1 + 8, 1.0/12.0)
+                                sim_states = np.array(sim_states)
+                                
+                                for sim_num in range(env.num_envs):
+
+                                    stiffness_index = sim_num // grid_size
+                                    damping_index = sim_num % grid_size
+
+                                    print(f"ENVIRONMENT : {sim_num}")
+                                    stiffness = stiffness_array[stiffness_index]
+                                    damping = damping_array[damping_index]
+
+                                    plt.figure()
+                                    plt.plot(timesteps, downsample(signal), "--", label="Commanded Signal")
+                                    plt.plot(timesteps, sim_states[:, sim_num, index], label=f"Simulator #{sim_num} Trajectory")
+                                    
+                                    plt.xlabel("Time (s)")
+                                    plt.ylabel("Position (in radian)")
+
+                                    plt.title(f"Finger Index : {actuator}, Signal type : {signal_type}, Amplitude :{amplitude}, Freq : {freq} \n stiffness:{stiffness}, damping:{damping}")
+                                    plt.legend()
+
+                                    plt.show()
+                                    plt.close()
+
+                            signals[actuator]["simulator_joint_states"][signal_type][f"{amplitude}_{freq}"]["positions"] = np.array(sim_states)
 
     t1 = time.perf_counter()
     elapsed_time = t1 - t0
-
     print(elapsed_time)
+
+    # Store the full dictionary
+    with open("sys_id_sim_hardware_dict.pkl", "wb") as f:
+        pickle.dump(signals, f)
+
+def downsample(old_signal):
+    new_signal = []
+    for i in range(0, len(old_signal), 2):
+        new_signal.append(old_signal[i])
+
+    return new_signal
 
 def step_hardware(env, actions: torch.Tensor) -> Tuple[Dict[str, torch.Tensor], torch.Tensor, torch.Tensor, Dict[str, Any]]:
     """Step the physics of the environment.
