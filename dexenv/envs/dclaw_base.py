@@ -201,7 +201,7 @@ class DClawBase(VecTask):
 
         self.max_delay = 4 # delay is this number - 1 timesteps
         self.actions_buffer = torch.zeros(self.num_envs, self.max_delay, self.num_actions, device=self.device)
-        self.delays = torch.randint(0, self.max_delay, (self.num_envs,), device=self.device)
+        self.delays = torch.randint(1, self.max_delay, (self.num_envs,), device=self.device)
 
     def create_sim(self):
         self.dt = self.cfg["sim"]["dt"]
@@ -838,11 +838,11 @@ class DClawBase(VecTask):
         self.gym.set_dof_state_tensor_indexed(self.sim,
                                               gymtorch.unwrap_tensor(self.dof_state),
                                               gymtorch.unwrap_tensor(hand_indices), len(env_ids))
-
+        
         self.progress_buf[env_ids] = 0
         self.reset_buf[env_ids] = 0
         self.successes[env_ids] = 0
-        self.actions_buffer[env_ids] = 0.
+        self.actions_buffer[env_ids] = torch.zeros(self.max_delay, self.num_actions, device=self.device)
 
     def get_numpy_rgb_images(self, camera_handles):
         rgb_obs_buf = []
