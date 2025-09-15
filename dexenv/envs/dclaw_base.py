@@ -199,9 +199,9 @@ class DClawBase(VecTask):
         self.cfg.env.numObservations = self.num_observations
         self.create_ob_act_space()
 
-        self.max_delay = 4 # delay is this number - 1 timesteps
+        self.max_delay = 3 # delay is this number - 1 timesteps
         self.actions_buffer = torch.zeros(self.num_envs, self.max_delay, self.num_actions, device=self.device)
-        self.delays = torch.randint(1, self.max_delay, (self.num_envs,), device=self.device)
+        self.delays = torch.randint(0, self.max_delay, (self.num_envs,), device=self.device)
 
     def create_sim(self):
         self.dt = self.cfg["sim"]["dt"]
