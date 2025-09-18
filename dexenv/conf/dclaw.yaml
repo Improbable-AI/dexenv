@@ -12,6 +12,7 @@ task:
     name: DclawMultiObjs
   obj:
     dataset: miscnet
+    num_objs: 1
 
 logging:
   eval_interval: 600

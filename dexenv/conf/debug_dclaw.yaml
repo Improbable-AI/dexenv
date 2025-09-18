@@ -5,10 +5,10 @@ defaults:
 task:
   headless: False
   obj:
-    num_objs: 2
+    num_objs: 1
 
 alg:
-  num_envs: 40
+  num_envs: 10
 
 logging:
   wandb:
