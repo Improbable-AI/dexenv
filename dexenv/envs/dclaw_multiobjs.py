@@ -186,10 +186,10 @@ class DclawMultiObjs(DClawBase):
         object_assets, goal_assets, object_ids, object_tex_handles, object_ptds = [], [], [], [], []
         object_cat_ids = []
 
-        # THIS MAKES THE OBJECT A DUCK.
+        # THIS MAKES IT A ROLLER -- '75443' for duck
         object_id = None
         for index, object_urdf in enumerate(object_urdfs):
-            if '75443' in str(object_urdf):
+            if 't5n8oys5' in str(object_urdf):
                 object_id = index
                 break
 
