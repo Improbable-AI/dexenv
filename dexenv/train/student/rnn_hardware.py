@@ -12,6 +12,10 @@ import torch
 import pytorch3d.transforms as p3dtf
 import open3d as o3d
 
+from isaacgym import gymapi
+from isaacgym import gymtorch
+from isaacgymenvs.utils.torch_jit_utils import *
+
 import dexenv
 from dexenv.agent.rnn_agent import RNNAgent
 from dexenv.engine.rnn_engine import RNNEngine
@@ -28,6 +32,37 @@ from dexenv.envs.dclaw_base import DClawBase
 from dexenv.utils.torch_utils import quat_xyzw_to_wxyz
 
 from isaacgymenvs.utils.torch_jit_utils import to_torch, quat_apply
+
+import rclpy
+from std_msgs.msg import Float64MultiArray
+from sensor_msgs.msg import JointState
+from rclpy.node import Node
+
+# Initialize the ROS 2 client library (rclpy)
+rclpy.init()
+
+# Create a minimal node (this will be a temporary node that is shut down after publishing)
+node = Node('system_identification_publisher')
+
+# Create the publisher
+publisher = node.create_publisher(Float64MultiArray, '/dclaw/joint_commands', 1)
+
+start_time = 0
+
+def publish_message(joint_angles):
+    # global message_number
+    # Create a message
+    joint_msg = Float64MultiArray()
+    joint_msg.data = joint_angles.cpu().numpy().flatten().tolist()
+
+    # Publish the message
+    publisher.publish(joint_msg)
+
+    # Log the message that was published
+    node.get_logger().info(f'Publishing: "{joint_msg.data}"')
+    # message_number += 1
+    # node.get_logger().info(f'{message_number}')
+
 
 @hydra.main(config_path=dexenv.PROJECT_ROOT.joinpath('conf').as_posix(),
             config_name="debug_dclaw_fptd")
@@ -82,7 +117,10 @@ def main(cfg: DictConfig):
     # print(ob["ob"].shape)
     # print(ob["state"].shape)
     # exit()
-
+    
+    dt = 1.0 / 12.0
+    global start_time
+    start_time = time.perf_counter()
     for t in tqdm(range(time_steps), desc='Step', disable=False):
         # if render:
         #     env.render()
@@ -99,16 +137,24 @@ def main(cfg: DictConfig):
                                                              **action_kwargs)
         # print("Predicted rotation distance : ", action_info['pred_rot_dist'])
 
-        print("Joint commands degrees : ", np.rad2deg(action.cpu().numpy()), flush=True)
-
         next_ob, reward, done, info = step_hardware(env, action)
-
+        
         next_ob = deepcopy(next_ob)
         done = deepcopy(done)
         ob = next_ob
 
-        if return_on_done and done:
-            break
+        # compute next target time
+        next_time = start_time + (t + 1) * dt
+        now = time.perf_counter()
+        sleep_duration = next_time - now
+        if sleep_duration > 0:
+            time.sleep(sleep_duration)
+        else:
+            # we’re running late: skip sleep to catch up
+            print(f'running late by {sleep_duration}, skipping sleep')
+
+        # if return_on_done and done:
+        #     break
 
     t1 = time.perf_counter()
     elapsed_time = t1 - t0
@@ -125,17 +171,18 @@ def step_hardware(env, actions: torch.Tensor) -> Tuple[Dict[str, torch.Tensor], 
     """
     env.raw_actions_from_policy = actions.clone()
     # randomize actions
-    if env.dr_randomizations.get('actions', None):
-        actions = env.dr_randomizations['actions']['noise_lambda'](actions)
+    # if env.dr_randomizations.get('actions', None):
+    #     actions = env.dr_randomizations['actions']['noise_lambda'](actions)
     action_tensor = torch.clamp(actions, -env.clip_actions, env.clip_actions)
 
-    print("Joint commands degrees CLAMPED : ", np.rad2deg(action_tensor.cpu().numpy()), flush=True)
-
     # apply actions
-    env.pre_physics_step(action_tensor)
+    # env.pre_physics_step(action_tensor)
+    pre_physics_step_custom(env, action_tensor)
     
     # # step physics and render each frame
     for i in range(env.control_freq_inv):
+        # apply_force = i == 0
+        # env.pre_physics_step(action_tensor, apply_force)
         env.render()
         env.gym.simulate(env.sim)
     # to fix!
@@ -151,6 +198,67 @@ def step_hardware(env, actions: torch.Tensor) -> Tuple[Dict[str, torch.Tensor], 
 
     env.extras["time_outs"] = env.timeout_buf.to(env.rl_device)
     return env.update_obs(), env.rew_buf.to(env.rl_device), env.done_buf.to(env.rl_device), env.extras
+
+
+def pre_physics_step_custom(env, actions):
+        env_ids = env.reset_buf.nonzero(as_tuple=False).squeeze(-1)
+        goal_env_ids = env.reset_goal_buf.nonzero(as_tuple=False).squeeze(-1)
+
+        if len(goal_env_ids) > 0 and len(env_ids) == 0:
+            env.reset_target_pose(goal_env_ids, apply_reset=True)
+        elif len(goal_env_ids) > 0:
+            env.reset_target_pose(goal_env_ids)
+
+        if len(env_ids) > 0:
+            env.reset_idx(env_ids, goal_env_ids)
+
+        env.actions = actions.clone().to(env.device)
+
+        if env.cfg.env.action_ema is not None:
+            env.action_ema_val[env_ids] = 0
+            env.action_ema_val[goal_env_ids] = 0
+            env.actions = env.actions * env.cfg.env.action_ema + env.action_ema_val * (1 - env.cfg.env.action_ema)
+            env.action_ema_val = env.actions.clone()
+        if env.cfg.env.dof_vel_pol_limit is not None:
+            delta_action = env.actions * env.cfg.env.dof_vel_pol_limit * (env.dt * env.cfg.env.controlFrequencyInv)
+        else:
+            delta_action = env.dclaw_dof_speed_scale * env.dt * env.actions
+        if env.cfg.env.relativeToPrevTarget:
+            targets = env.prev_targets[:, env.dof_joint_indices] + delta_action
+        else:
+            targets = env.dclaw_dof_pos + delta_action
+
+        print('Final delta :',  np.rad2deg(delta_action.cpu().numpy()), flush=True)
+
+        env.cur_targets[:, env.dof_joint_indices] = tensor_clamp(targets,
+                                                                   env.dclaw_dof_lower_limits[
+                                                                       env.dof_joint_indices],
+                                                                   env.dclaw_dof_upper_limits[
+                                                                       env.dof_joint_indices])
+
+        env.prev_targets[:, env.dof_joint_indices] = env.cur_targets[:, env.dof_joint_indices]
+        # env.cur_targets[:, :] = 0
+        # env.cur_targets[:, 9] = 0.5
+        # env.cur_targets[:, 3] = 0.5
+        # env.cur_targets[:, 6] = 0.5
+        # env.cur_targets[:, 9] = 0.5
+
+        # print(env.cur_targets)
+        # Send the message to the hardware
+        publish_message(env.cur_targets)
+        
+        env.gym.set_dof_position_target_tensor(env.sim, gymtorch.unwrap_tensor(env.cur_targets))
+
+        # if env.force_scale > 0.0:
+        #     env.rb_forces *= torch.pow(env.force_decay, env.dt / env.force_decay_interval)
+        #     # apply new forces
+        #     force_indices = (torch.rand(env.num_envs, device=env.device) < env.random_force_prob).nonzero()
+        #     rb_force_shape = env.rb_forces[force_indices, env.object_rb_handles, :].shape
+        #     rb_force_dir = torch.randn(rb_force_shape, device=env.device)
+        #     rb_force_dir = rb_force_dir / rb_force_dir.norm(dim=-1, keepdim=True)
+        #     env.rb_forces[force_indices, env.object_rb_handles, :] = rb_force_dir * env.object_rb_masses[force_indices] * env.force_scale
+        #     env.gym.apply_rigid_body_force_tensors(env.sim, gymtorch.unwrap_tensor(env.rb_forces), None,
+        #                                             gymapi.LOCAL_SPACE)
 
 def post_physics_step(env):
     env.progress_buf += 1
