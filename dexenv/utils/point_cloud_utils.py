@@ -2,6 +2,8 @@ import torch
 from isaacgym import gymapi
 from isaacgym import gymtorch
 
+import matplotlib.pyplot as plt
+import numpy as np
 
 class PointCloudGenerator:
     def __init__(self, proj_matrix, view_matrix, camera_props=None,
@@ -97,6 +99,15 @@ class CameraPointCloud:
                                                                     env,
                                                                     c_handle,
                                                                     gymapi.IMAGE_DEPTH)
+                
+                # rgb_tensor = self.gym.get_camera_image_gpu_tensor(self.sim,
+                #                                                   env,
+                #                                                   c_handle,
+                #                                                   gymapi.IMAGE_COLOR)
+                
+                # torch_rgb_tensor = gymtorch.wrap_tensor(rgb_tensor)
+                # self.rgb_tensor = torch_rgb_tensor
+
                 torch_depth_tensor = gymtorch.wrap_tensor(depth_tensor)
                 depth_buffers.append(torch_depth_tensor)
 
@@ -175,5 +186,13 @@ class CameraPointCloud:
         out = []
         env_iter = range(len(self.envs)) if env_ids is None else env_ids
         out = [torch.stack(img_tensors[i]) for i in env_iter]
+
+        # plt.figure()
+        # rgb_image = self.rgb_tensor.cpu().numpy()
+        # rgb_image = rgb_image[..., :3]
+        # plt.imshow(rgb_image)
+        # plt.imshow(out[0].squeeze(0).cpu().numpy())
+        # plt.show()
+        # plt.close()
 
         return torch.stack(out)
