@@ -257,26 +257,34 @@ class DclawRealPTD(DclawMultiObjs):
                                         )
 
     def get_camera_pose(self):
-        cam_pos = np.array([0.573827, 0.0339394, -0.0351936])
-        cam_ori = np.array([0.371878, -0.382269, -0.601543, 0.594747])
-        cam_ori = R.from_quat(cam_ori).as_matrix()
-        cam_T = np.eye(4)
-        cam_T[:3, :3] = cam_ori
-        cam_T[:3, 3] = cam_pos
+        # cam_pos = np.array([0.573827, 0.0339394, -0.0351936])
+        # cam_ori = np.array([0.371878, -0.382269, -0.601543, 0.594747])
+        # cam_ori = R.from_quat(cam_ori).as_matrix()
+        # cam_T = np.eye(4)
+        # cam_T[:3, :3] = cam_ori
+        # cam_T[:3, 3] = cam_pos
+
+        cam_T = np.array([[-0.08117, -0.38119,  0.92092, -0.48786],
+                        [-0.99562, -0.01203, -0.04274,  0.0136],
+                        [ 0.04643, -0.92442, -0.37855,  0.0132],
+                        [ 0.,       0.,       0.,       1.     ]])
+
+        cam_T[2, 3] += 0.25
+
         return cam_T
 
     def get_camera_setup(self):
         camera_poses = []
-        dclaw_start_pose = self.get_dclaw_start_pose()
-        base_link_pos = np.array([dclaw_start_pose.p.x, dclaw_start_pose.p.y, dclaw_start_pose.p.z])
-        base_link_quat = np.array([dclaw_start_pose.r.x, dclaw_start_pose.r.y, dclaw_start_pose.r.z, dclaw_start_pose.r.w])
-        base_link_rot = R.from_quat(base_link_quat).as_matrix()
-        base_link_T = np.eye(4)
-        base_link_T[:3, :3] = base_link_rot
-        base_link_T[:3, 3] = base_link_pos
+        # dclaw_start_pose = self.get_dclaw_start_pose()
+        # base_link_pos = np.array([dclaw_start_pose.p.x, dclaw_start_pose.p.y, dclaw_start_pose.p.z])
+        # base_link_quat = np.array([dclaw_start_pose.r.x, dclaw_start_pose.r.y, dclaw_start_pose.r.z, dclaw_start_pose.r.w])
+        # base_link_rot = R.from_quat(base_link_quat).as_matrix()
+        # base_link_T = np.eye(4)
+        # base_link_T[:3, :3] = base_link_rot
+        # base_link_T[:3, 3] = base_link_pos
         cam_T = self.get_camera_pose()
-
-        cam_T = base_link_T @ cam_T
+        
+        # cam_T = base_link_T @ cam_T
         offset = np.array([
             [0.0, -1.0, 0.0, 0.0],
             [0.0, 0.0, -1.0, 0.0],

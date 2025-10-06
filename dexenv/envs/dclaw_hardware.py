@@ -4,6 +4,7 @@ import torch
 from gym import spaces
 from isaacgym import gymapi
 from scipy.spatial.transform import Rotation as R
+import open3d as o3d
 
 import dexenv
 from dexenv.envs.dclaw_multiobjs import DclawMultiObjs
@@ -194,6 +195,16 @@ class DclawHardware(DclawMultiObjs):
         pts = self.ptd_cam.get_point_cloud(filter_func=filter_hand_base) # ptd_cam uses the PointCloudGenerator which is a function of the camera intrinsics/extrinsics.
         self.gym.end_access_image_tensors(self.sim)
 
+        self.visualize = True
+
+        if self.visualize:
+            plot_pts = pts.reshape(-1, 3)
+            plot_pts = plot_pts.cpu().numpy()
+            pcd = o3d.geometry.PointCloud()
+            pcd.points = o3d.utility.Vector3dVector(plot_pts)
+            axes_origin = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.1, origin=[0, 0, 0])
+            o3d.visualization.draw_geometries([pcd, axes_origin])
+
         if self.cfg.env.ptd_to_robot_base:
             base_link_pos = self.rigid_body_states[:, self.base_link_handle][..., :3] # State from the simulator
             base_link_quat = self.rigid_body_states[:, self.base_link_handle][..., 3:7] # State from the simulator
@@ -209,6 +220,14 @@ class DclawHardware(DclawMultiObjs):
             base_link_pose_transform = p3dtf.Transform3d(matrix=base_link_pose_transform_T)
 
             pts = base_link_pose_transform.transform_points(points=pts)
+
+        if self.visualize:
+            plot_pts = pts.reshape(-1, 3)
+            plot_pts = plot_pts.cpu().numpy()
+            pcd = o3d.geometry.PointCloud()
+            pcd.points = o3d.utility.Vector3dVector(plot_pts)
+            axes_origin = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.1, origin=[0, 0, 0])
+            o3d.visualization.draw_geometries([pcd, axes_origin])
 
         self.hand_link_pos = self.rigid_body_states[:, self.hand_body_handles][:, :, 0:3] # State from the simulator
         self.hand_link_quat = self.rigid_body_states[:, self.hand_body_handles][:, :, 3:7] # State from the simulator
@@ -235,6 +254,15 @@ class DclawHardware(DclawMultiObjs):
         cad_ptd_obs = cad_ptd_obs.view(self.num_envs, -1, 3)
 
         ptd_obs = torch.cat((pts, cad_ptd_obs), dim=-2)
+
+        if self.visualize:
+            plot_pts = ptd_obs.reshape(-1, 3)
+            plot_pts = plot_pts.cpu().numpy()
+            pcd = o3d.geometry.PointCloud()
+            pcd.points = o3d.utility.Vector3dVector(plot_pts)
+            axes_origin = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.1, origin=[0, 0, 0])
+            o3d.visualization.draw_geometries([pcd, axes_origin])
+
         if self.quantization_size is not None:
             ptd_obs = ptd_obs / self.quantization_size
             ptd_obs = ptd_obs.int()
@@ -258,26 +286,44 @@ class DclawHardware(DclawMultiObjs):
                                         )
 
     def get_camera_pose(self):
-        cam_pos = np.array([0.573827, 0.0339394, -0.0351936])
-        cam_ori = np.array([0.371878, -0.382269, -0.601543, 0.594747])
-        cam_ori = R.from_quat(cam_ori).as_matrix()
-        cam_T = np.eye(4)
-        cam_T[:3, :3] = cam_ori
-        cam_T[:3, 3] = cam_pos
+        # TAO's old camera pose
+        # cam_pos = np.array([0.573827, 0.0339394, -0.0351936])
+        # cam_ori = np.array([0.371878, -0.382269, -0.601543, 0.594747])
+
+        # cam_ori = R.from_quat(cam_ori).as_matrix()
+        # cam_T = np.eye(4)
+        # cam_T[:3, :3] = cam_ori
+        # cam_T[:3, 3] = cam_pos
+        
+        # cam_T = np.array([[-0.08117, -0.38119,  0.92092, -0.48786],
+        #                 [-0.99562, -0.01203, -0.04274,  0.0536],
+        #                 [ 0.04643, -0.92442, -0.37855,  0.0132],
+        #                 [ 0.,       0.,       0.,       1.     ]])
+        
+        cam_T = np.array([[-0.08117, -0.38119,  0.92092, -0.48786],
+                        [-0.99562, -0.01203, -0.04274,  0.0136],
+                        [ 0.04643, -0.92442, -0.37855,  0.0132],
+                        [ 0.,       0.,       0.,       1.     ]])
+
+        cam_T[2, 3] += 0.25
+
         return cam_T
 
     def get_camera_setup(self):
         camera_poses = []
-        dclaw_start_pose = self.get_dclaw_start_pose()
-        base_link_pos = np.array([dclaw_start_pose.p.x, dclaw_start_pose.p.y, dclaw_start_pose.p.z])
-        base_link_quat = np.array([dclaw_start_pose.r.x, dclaw_start_pose.r.y, dclaw_start_pose.r.z, dclaw_start_pose.r.w])
-        base_link_rot = R.from_quat(base_link_quat).as_matrix()
-        base_link_T = np.eye(4)
-        base_link_T[:3, :3] = base_link_rot
-        base_link_T[:3, 3] = base_link_pos
+        # dclaw_start_pose = self.get_dclaw_start_pose()
+        # base_link_pos = np.array([dclaw_start_pose.p.x, dclaw_start_pose.p.y, dclaw_start_pose.p.z])
+        # base_link_quat = np.array([dclaw_start_pose.r.x, dclaw_start_pose.r.y, dclaw_start_pose.r.z, dclaw_start_pose.r.w])
+        # base_link_rot = R.from_quat(base_link_quat).as_matrix()
+        # base_link_T = np.eye(4)
+        # base_link_T[:3, :3] = base_link_rot
+        # base_link_T[:3, 3] = base_link_pos
         cam_T = self.get_camera_pose()
 
-        cam_T = base_link_T @ cam_T
+        # print("1 :", cam_T)
+        # cam_T = base_link_T @ cam_T
+        # print("2 :", cam_T)
+
         offset = np.array([
             [0.0, -1.0, 0.0, 0.0],
             [0.0, 0.0, -1.0, 0.0],
@@ -285,6 +331,8 @@ class DclawHardware(DclawMultiObjs):
             [0.0, 0.0, 0.0, 1.0],
         ])
         cam_T = cam_T @ offset
+
+        # print("3 :", cam_T)
         cam_pos = cam_T[:3, 3].flatten()
         cam_pose = gymapi.Transform()
         cam_pose.p = gymapi.Vec3(*cam_pos)

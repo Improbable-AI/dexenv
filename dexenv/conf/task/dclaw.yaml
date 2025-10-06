@@ -5,9 +5,9 @@ defaults:
   - _self_
 
 cam:
-  height: 180
-  width: 320
-  hov: 64
+  height: 480
+  width: 640
+  hov: 65
   cuda: True
   cam_num: 1
   sample_num: 6000
@@ -21,7 +21,7 @@ env:
   numEnvs: ${...alg.num_envs}
   envSpacing: 0.5
   episodeLength: 80 # Not used, but would be 8 sec if resetTime is not set
-  resetTime: 10 # Max time till reset, in seconds, if a goal wasn't achieved. Will overwrite the episodeLength if is > 0.
+  resetTime: 10 # 100 # Max time till reset, in seconds, if a goal wasn't achieved. Will overwrite the episodeLength if is > 0.
   enableDebugVis: False
   aggregateMode: 1
 

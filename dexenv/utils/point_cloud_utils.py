@@ -114,9 +114,25 @@ class CameraPointCloud:
                 view_matrix = self.gym.get_camera_view_matrix(self.sim,
                                                               envs[0],
                                                               c_handle)
+
+                # print("SIMULATION")
+                # print("VIEW MATRIX :", view_matrix, flush=True)
+
                 proj_matrix = self.gym.get_camera_proj_matrix(self.sim,
                                                               envs[0],
                                                               c_handle)
+                
+                # print("PROJECTION MATRIX :", proj_matrix, flush=True)
+
+                # VIEW MATRIX : [[-0.056228  0.381182 -0.922788  0.      ]
+                # [-0.997554  0.016992  0.067802  0.      ]
+                # [ 0.041525  0.924344  0.379295  0.      ]
+                # [-0.024794 -0.057555 -0.550944  1.      ]]
+                # PROJECTION MATRIX : [[ 1.569685  0.        0.        0.      ]
+                # [ 0.        2.092914  0.        0.      ]
+                # [ 0.        0.        0.       -1.      ]
+                # [ 0.        0.        0.001     0.      ]]
+
                 pt_generators.append(
                     PointCloudGenerator(
                         camera_props=camera_props,
@@ -187,12 +203,26 @@ class CameraPointCloud:
         env_iter = range(len(self.envs)) if env_ids is None else env_ids
         out = [torch.stack(img_tensors[i]) for i in env_iter]
 
-        # plt.figure()
         # rgb_image = self.rgb_tensor.cpu().numpy()
         # rgb_image = rgb_image[..., :3]
-        # plt.imshow(rgb_image)
-        # plt.imshow(out[0].squeeze(0).cpu().numpy())
+        # depth_image = out[0].squeeze(0).cpu().numpy()
+        # print("Depth shape :", depth_image.shape)
+        # depth_image[:75, :] = -10
+        
+        # fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+        
+        # axes[0].imshow(rgb_image)
+        # axes[0].set_title("RGB")
+        # axes[0].axis("on")
+
+        # im = axes[1].imshow(depth_image, cmap="magma")  # or "gray" if you prefer
+        # axes[1].set_title("Depth")
+        # axes[1].axis("on")
+        # fig.colorbar(im, ax=axes[1], fraction=0.046, pad=0.04)
+
+        # plt.tight_layout()
         # plt.show()
         # plt.close()
+        # Pink one is finger two
 
         return torch.stack(out)
