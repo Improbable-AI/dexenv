@@ -7,7 +7,7 @@ from torch.distributions import TransformedDistribution
 from torch.distributions.transforms import TanhTransform
 
 LOG_STD_MAX = 2
-LOG_STD_MIN = -20
+LOG_STD_MIN = -12
 
 
 class DiagGaussianPolicy(nn.Module):
@@ -18,7 +18,7 @@ class DiagGaussianPolicy(nn.Module):
                  std_cond_in=False,
                  tanh_on_dist=False,
                  in_features=None,
-                 clamp_log_std=False):  # add tanh on the action distribution
+                 clamp_log_std=True):  # add tanh on the action distribution
         super().__init__()
         self.std_cond_in = std_cond_in
         self.tanh_on_dist = tanh_on_dist
