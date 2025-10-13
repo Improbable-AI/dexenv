@@ -62,7 +62,9 @@ class DclawRealPTD(DclawMultiObjs):
 
         dclaw_asset, dclaw_dof_props = self.get_dclaw_asset(asset_root=None)
         object_assets, goal_assets, object_ids, object_textures, object_ptds, object_cat_ids = self.load_object_asset()
+        print("LOADED OBJECTS", flush=True)
         table_asset = self.get_table_asset()
+        print("LOADED TABLE", flush=True)
         table_pose = self.get_table_pose()
         if self.obs_type == "full_state":
             sensor_pose = gymapi.Transform()
@@ -88,8 +90,10 @@ class DclawRealPTD(DclawMultiObjs):
 
         self.fingertip_handles = [self.gym.find_asset_rigid_body_index(dclaw_asset, name) for name in
                                   self.fingertips]
-
+        
+    
         camera_poses, camera_params = self.get_camera_setup()
+        print("GOT CAMERA SETUP", flush=True)
         dclaw_rb_count = self.gym.get_asset_rigid_body_count(dclaw_asset)
         object_rb_count = self.gym.get_asset_rigid_body_count(object_assets[0])
 
@@ -99,6 +103,7 @@ class DclawRealPTD(DclawMultiObjs):
         self.object_ptds = []
         self.object_handles = []
         for i in range(self.num_envs):
+            print(f"ENVIRONMENT {i}", flush=True)
             obj_asset_id = i % num_object_assets
             env_obj_ids.append(object_ids[obj_asset_id])
             env_ptr = self.gym.create_env(
@@ -273,7 +278,7 @@ class DclawRealPTD(DclawMultiObjs):
 
         return cam_T
 
-    def get_camera_setup(self):
+    def get_camera_setup(self): 
         camera_poses = []
         # dclaw_start_pose = self.get_dclaw_start_pose()
         # base_link_pos = np.array([dclaw_start_pose.p.x, dclaw_start_pose.p.y, dclaw_start_pose.p.z])
