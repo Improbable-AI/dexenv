@@ -9,6 +9,9 @@ from torch.distributions.transforms import TanhTransform
 LOG_STD_MAX = 2
 LOG_STD_MIN = -12
 
+MEAN_MAX = 100
+MEAN_MIN = -100
+
 class RNNDiagGaussianPolicy(nn.Module):
     def __init__(self,
                  body_net,
@@ -55,6 +58,7 @@ class RNNDiagGaussianPolicy(nn.Module):
         else:
             log_std = self.head_logstd.expand_as(mean)
         if self.clamp_log_std:
+            mean = torch.clamp(mean, MEAN_MIN, MEAN_MAX)
             log_std = torch.clamp(log_std, LOG_STD_MIN, LOG_STD_MAX)
         std = torch.exp(log_std)
 
@@ -62,8 +66,8 @@ class RNNDiagGaussianPolicy(nn.Module):
             print("Previous mean :", self.prev_mean, flush=True)
             print("Previous std :", self.prev_std, flush=True)
 
-            # print("New mean :", mean, flush=True)
-            # print("New std :", std, flush=True)
+            print("New mean :", mean, flush=True)
+            print("New std :", std, flush=True)
             
             exit()
 
