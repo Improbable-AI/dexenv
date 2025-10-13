@@ -100,6 +100,8 @@ class CameraPointCloud:
                                                                     c_handle,
                                                                     gymapi.IMAGE_DEPTH)
                 
+
+                # ==== RGB TENSOR
                 # rgb_tensor = self.gym.get_camera_image_gpu_tensor(self.sim,
                 #                                                   env,
                 #                                                   c_handle,
@@ -107,6 +109,7 @@ class CameraPointCloud:
                 
                 # torch_rgb_tensor = gymtorch.wrap_tensor(rgb_tensor)
                 # self.rgb_tensor = torch_rgb_tensor
+                # ==== RGB TENSOR
 
                 torch_depth_tensor = gymtorch.wrap_tensor(depth_tensor)
                 depth_buffers.append(torch_depth_tensor)
@@ -203,6 +206,8 @@ class CameraPointCloud:
         env_iter = range(len(self.envs)) if env_ids is None else env_ids
         out = [torch.stack(img_tensors[i]) for i in env_iter]
 
+        ## PLOTTING CODE BEGINS
+
         # rgb_image = self.rgb_tensor.cpu().numpy()
         # rgb_image = rgb_image[..., :3]
         # depth_image = out[0].squeeze(0).cpu().numpy()
@@ -223,6 +228,9 @@ class CameraPointCloud:
         # plt.tight_layout()
         # plt.show()
         # plt.close()
-        # Pink one is finger two
+
+        # Pink finger is Finger 2
+
+        ## PLOTTING CODE ENDS
 
         return torch.stack(out)
