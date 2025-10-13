@@ -62,8 +62,8 @@ class RNNDiagGaussianPolicy(nn.Module):
             print("Previous mean :", self.prev_mean, flush=True)
             print("Previous std :", self.prev_std, flush=True)
 
-            print("New mean :", mean, flush=True)
-            print("New std :", std, flush=True)
+            # print("New mean :", mean, flush=True)
+            # print("New std :", std, flush=True)
             
             exit()
 

@@ -332,12 +332,16 @@ class DClawBase(VecTask):
 
     def create_camera(self, camera_poses, env_ptr, camera_params):
         cam_handles = []
+        print("CREATING CAMERA", flush=True)
         for ic in range(min(len(camera_poses), self.cfg.cam.cam_num)):
             camera_handle = self.gym.create_camera_sensor(env_ptr, camera_params)
+            print(f"IC {ic} camera handle created", flush=True)
             if isinstance(camera_poses[ic], tuple):
                 self.gym.set_camera_location(camera_handle, env_ptr, camera_poses[ic][0], camera_poses[ic][1])
+                print(f"SET CAMERA", flush=True)
             else:
                 self.gym.set_camera_transform(camera_handle, env_ptr, camera_poses[ic])
+                print(f"SET CAMERA TRANSFORM", flush=True)
             cam_handles.append(camera_handle)
         return cam_handles
 

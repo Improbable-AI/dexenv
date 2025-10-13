@@ -164,6 +164,7 @@ class DclawRealPTD(DclawMultiObjs):
                     env_ptr, goal_handle, 0, gymapi.MESH_VISUAL, gymapi.Vec3(0.6, 0.72, 0.98))
 
             cam_handles = self.create_camera(camera_poses, env_ptr, camera_params)
+            print(f"CAMERA CREATED", flush=True)
             self.cam_handles.append(cam_handles)
             table_handle = self.gym.create_actor(env_ptr, table_asset, table_pose, "table", i, 0)
             self.gym.set_rigid_body_color(env_ptr, table_handle, 0, gymapi.MESH_VISUAL,
