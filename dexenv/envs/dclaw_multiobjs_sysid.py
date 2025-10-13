@@ -187,13 +187,13 @@ class DclawMultiObjsSysID(DClawBaseSysID):
         object_cat_ids = []
 
         # THIS MAKES IT A ROLLER -- '75443' for duck
-        object_id = None
-        for index, object_urdf in enumerate(object_urdfs):
-            if 't5n8oys5' in str(object_urdf):
-                object_id = index
-                break
+        # object_id = None
+        # for index, object_urdf in enumerate(object_urdfs):
+        #     if 't5n8oys5' in str(object_urdf):
+        #         object_id = index
+        #         break
 
-        self.cfg.obj.object_id = object_id
+        # self.cfg.obj.object_id = object_id
 
         if self.cfg.obj.object_id is not None:
             urdf_to_load = self.object_urdfs[self.cfg.obj.object_id]
