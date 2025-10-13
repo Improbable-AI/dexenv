@@ -62,9 +62,7 @@ class DclawRealPTD(DclawMultiObjs):
 
         dclaw_asset, dclaw_dof_props = self.get_dclaw_asset(asset_root=None)
         object_assets, goal_assets, object_ids, object_textures, object_ptds, object_cat_ids = self.load_object_asset()
-        print("LOADED OBJECTS", flush=True)
         table_asset = self.get_table_asset()
-        print("LOADED TABLE", flush=True)
         table_pose = self.get_table_pose()
         if self.obs_type == "full_state":
             sensor_pose = gymapi.Transform()
@@ -93,7 +91,6 @@ class DclawRealPTD(DclawMultiObjs):
         
     
         camera_poses, camera_params = self.get_camera_setup()
-        print("GOT CAMERA SETUP", flush=True)
         dclaw_rb_count = self.gym.get_asset_rigid_body_count(dclaw_asset)
         object_rb_count = self.gym.get_asset_rigid_body_count(object_assets[0])
 
@@ -103,7 +100,6 @@ class DclawRealPTD(DclawMultiObjs):
         self.object_ptds = []
         self.object_handles = []
         for i in range(self.num_envs):
-            print(f"ENVIRONMENT {i}", flush=True)
             obj_asset_id = i % num_object_assets
             env_obj_ids.append(object_ids[obj_asset_id])
             env_ptr = self.gym.create_env(
@@ -164,7 +160,6 @@ class DclawRealPTD(DclawMultiObjs):
                     env_ptr, goal_handle, 0, gymapi.MESH_VISUAL, gymapi.Vec3(0.6, 0.72, 0.98))
 
             cam_handles = self.create_camera(camera_poses, env_ptr, camera_params)
-            print(f"CAMERA CREATED", flush=True)
             self.cam_handles.append(cam_handles)
             table_handle = self.gym.create_actor(env_ptr, table_asset, table_pose, "table", i, 0)
             self.gym.set_rigid_body_color(env_ptr, table_handle, 0, gymapi.MESH_VISUAL,
