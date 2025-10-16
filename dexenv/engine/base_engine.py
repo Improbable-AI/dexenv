@@ -82,7 +82,9 @@ class BaseEngine:
                 self.cur_step = 0
         else:
             if self.cfg.alg.pretrain_model is not None:
+                print(f"PRETRAINED MODEL PATH: {self.cfg.alg.pretrain_model}")
                 self.agent.load_model(pretrain_model=self.cfg.alg.pretrain_model)
+                print("MODEL LOADED!")
 
     def train(self, **kwargs):
         raise NotImplementedError
