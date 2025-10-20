@@ -62,15 +62,28 @@ class RNNDiagGaussianPolicy(nn.Module):
             log_std = torch.clamp(log_std, LOG_STD_MIN, LOG_STD_MAX)
         std = torch.exp(log_std)
 
-        if torch.isnan(mean).any().item():
-            print("Previous mean :", self.prev_mean, flush=True)
-            print("Previous std :", self.prev_std, flush=True)
+        def zero_fill_and_mask_bt(mean: torch.Tensor, std: torch.Tensor):
+            """
+            mean, std: (B, T, A)
+            Returns:
+            mean_out: (B, T, A)  # invalid rows -> 0
+            std_out:  (B, T, A)  # invalid rows -> 1
+            valid_bt: (B, T)     # True where row is valid
+            """
+            assert mean.shape == std.shape and mean.ndim == 3
+            B, T, A = mean.shape
 
-            print("New mean :", mean, flush=True)
-            print("New std :", std, flush=True)
-            
-            exit()
+            # A (b,t) row is valid iff *all* actions are finite in both mean and std
+            valid_bt = torch.isfinite(mean).all(dim=2) & torch.isfinite(std).all(dim=2)  # (B, T)
+            mask_exp = valid_bt.unsqueeze(-1)  # (B, T, 1)
 
+            mean_out = torch.where(mask_exp, mean, torch.zeros(1, device=mean.device, dtype=mean.dtype))
+            std_out  = torch.where(mask_exp, std,  torch.ones(1,  device=std.device,  dtype=std.dtype))
+
+            return mean_out, std_out, valid_bt
+
+        mean, std, valid_mask = zero_fill_and_mask_bt(mean, std)
+        
         self.prev_mean = mean.cpu().detach().numpy()
         self.prev_std = std.cpu().detach().numpy()
 
