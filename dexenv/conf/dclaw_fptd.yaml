@@ -11,7 +11,7 @@ alg:
   train_rollout_steps: 80
   traj_keys_in_cpu: [ 'ob', 'action', 'reward', 'done', 'true_done', 'state' ]
   opt_epochs: 4
-  max_grad_norm: 5.
+  max_grad_norm: 1.0
   reset_first_in_rollout: True
   std_cond_in: True
   loss: 'mle'
