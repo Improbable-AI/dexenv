@@ -100,9 +100,12 @@ class DclawSysID(DclawMultiObjsSysID):
         # self.object_ptds = []
         # self.object_handles = []
 
+        # stiffness = 2.772 # 3.558 # 2.772
+        # damping = 0.273 # 0.382 # 0.273
+
         grid_size = int(np.sqrt(self.num_envs))
-        stiffness_array = np.linspace(2, 4, grid_size)
-        damping_array = np.linspace(0.1, 0.5, grid_size)
+        stiffness_array = np.linspace(0.5, 2.5, grid_size)
+        damping_array = np.linspace(0.05, 0.3, grid_size)
         
         for i in range(self.num_envs):
         #     obj_asset_id = i % num_object_assets

@@ -65,7 +65,7 @@ def main(cfg: DictConfig):
     evaluation = True
     obs = None
 
-    with open("/workspace/dexenv-ros-nn/system_id/sys_id_hardware_kp200_kd10.pkl", "rb") as f:
+    with open("/workspace/dexenv-ros-nn/system_id/sys_id_hardware_kp200_kd10_new.pkl", "rb") as f:
         signals = pickle.load(f)
 
     t0 = time.perf_counter()
@@ -81,7 +81,7 @@ def main(cfg: DictConfig):
 
     actuators = ["40", "41", "42", "10", "11", "12", "30", "31", "32", "20", "21", "22"]
     signal_types = ["step", "sinusoidal"]
-    frequencies = [0.05, 0.2, 0.5, 1, 1.5]
+    frequencies = [0.05, 0.2, 0.5] # , 1, 1.5]
 
     def send_dclaw_home():
         joint_command = torch.zeros(act_dim, device=env.device)
@@ -90,135 +90,208 @@ def main(cfg: DictConfig):
     
     signals["num_envs"] = env.num_envs
 
+    # stiffness = 0 # 3.558 # 2.772
+    # damping = 0 # 0.382 # 0.273
+
     grid_size = int(np.sqrt(env.num_envs))
-    stiffness_array = np.linspace(2, 4, grid_size)
-    damping_array = np.linspace(0.1, 0.5, grid_size)
+    # stiffness_array = np.linspace(stiffness, stiffness, grid_size)
+    # damping_array = np.linspace(damping, damping, grid_size)
+    stiffness_array = np.linspace(0.5, 2.5, grid_size)
+    damping_array = np.linspace(0.05, 0.3, grid_size)
     
     for index, actuator in enumerate(actuators):
-            print(index, actuator)
-            signals[actuator]["simulator_joint_states"] = {}
-            
-            if index % 3 == 0:
-                # The top motor can only go upto ~0.65 radian in the positive direction
-                amplitudes = [0.2, 0.35, 0.55]
-            else:
-                amplitudes = [0.5, 1.0, 1.5]
+        
+        if index != 2:
+            continue
+        
+        print(index, actuator)
+        signals[actuator]["simulator_joint_states"] = {}
+        
+        if index % 3 == 0:
+            # The top motor can only go upto ~0.65 radian in the positive direction
+            amplitudes = [0.2, 0.35, 0.55]
+        else:
+            amplitudes = [0.5, 1.0, 1.5]
 
-            for signal_type in signal_types:
-                signals[actuator]["simulator_joint_states"][signal_type] = {}
-                
-                if signal_type == "step":
-                    for amplitude in amplitudes:
+        panels = []
+
+        for signal_type in signal_types:
+            signals[actuator]["simulator_joint_states"][signal_type] = {}
+            
+            if signal_type == "step":
+                for amplitude in amplitudes:
+                    
+                    print(f"Finger Index:{actuator}, Signal type:{signal_type}, Amplitude:{amplitude}")
+                    
+                    signal = signals[actuator]["input_joint_commands"][signal_type][f"{amplitude}"]
+                    signals[actuator]["simulator_joint_states"][signal_type][f"{amplitude}"] = {}
+                    
+                    send_dclaw_home()
+
+                    sim_states = []
+
+                    start_time = time.perf_counter()
+                    for t in range(0, len(signal)):
+                        # print(t)
+                        joint_command = torch.zeros(act_dim, device=env.device)
+
+                        for env_index in range(env.num_envs):
+                            joint_command[index + env_index * 12] = signal[t]
                         
-                        print(f"Finger Index:{actuator}, Signal type:{signal_type}, Amplitude:{amplitude}")
+                        current_state = env.dclaw_dof_pos.cpu().numpy()
+                        sim_states.append(current_state)
+
+                        # Send command to step the simulator for 1/12.0 second
+                        next_ob, reward, done, info = step_hardware(env, joint_command)
+
+                    if PLOT_FIGURES:
+                        timesteps = np.arange(0, 1 + 2, 1.0/12.0)
+                        sim_states = np.array(sim_states)
+
+                        hardware_steps = signals[actuator]["hardware_joint_states"][signal_type][f"{amplitude}"]["positions"]
+                        hardware_traj = hardware_steps
                         
-                        signal = signals[actuator]["input_joint_commands"][signal_type][f"{amplitude}"]
-                        signals[actuator]["simulator_joint_states"][signal_type][f"{amplitude}"] = {}
+                        for sim_num in range(env.num_envs):
+
+                            stiffness_index = sim_num // grid_size
+                            damping_index = sim_num % grid_size
+
+                            # print(f"ENVIRONMENT : {sim_num}")
+                            stiffness = stiffness_array[stiffness_index]
+                            damping = damping_array[damping_index]
+
+                            panel = {}
+                            panel["timesteps"] = timesteps
+                            panel["commanded_signal"] = signal
+                            panel["hardware_traj"] = hardware_traj
+                            panel["simulator_traj"] = sim_states[:, sim_num, index]
+                            panel["xlabel"] = "Time (s)"
+                            panel["ylabel"] = "Position (in radian)"
+                            panel["title"] = f"Finger Index : {actuator}, Signal type : {signal_type}, Amplitude :{amplitude}, \n stiffness:{stiffness}, damping:{damping}"
+
+                            panels.append(panel)
+
+                            # plt.figure()
+                            # plt.plot(timesteps, downsample(signal), "--", label="Commanded Signal")
+                            # plt.plot(timesteps, hardware_traj, label="Hardware trajectory")
+                            # plt.plot(timesteps, sim_states[:, sim_num, index], label=f"Simulator #{sim_num} Trajectory")
+                            
+                            # plt.xlabel("Time (s)")
+                            # plt.ylabel("Position (in radian)")
+
+                            # plt.title(f"Finger Index : {actuator}, Signal type : {signal_type}, Amplitude :{amplitude}, \n stiffness:{stiffness}, damping:{damping}")
+                            # plt.legend()
+
+                            # plt.show()
+                            # plt.close()
+
+                    signals[actuator]["simulator_joint_states"][signal_type][f"{amplitude}"]["positions"] = np.array(sim_states)
+
+            elif signal_type == "sinusoidal":
+                for amplitude in amplitudes:
+                    for freq in frequencies:
+                        
+                        print(f"Finger Index : {actuator}, Signal type : {signal_type}, Amplitude :{amplitude}, Freq : {freq}")
+
+                        signal = signals[actuator]["input_joint_commands"][signal_type][f"{amplitude}_{freq}"]
+                        signals[actuator]["simulator_joint_states"][signal_type][f"{amplitude}_{freq}"] = {}
                         
                         send_dclaw_home()
 
                         sim_states = []
-
-                        start_time = time.perf_counter()
-                        for t in range(0, len(signal), 2):
+                        for t in range(0, len(signal)):
                             # print(t)
                             joint_command = torch.zeros(act_dim, device=env.device)
-
                             for env_index in range(env.num_envs):
                                 joint_command[index + env_index * 12] = signal[t]
+                            # print("joint command :", joint_command)
 
                             # Send command to step the simulator for 1/12.0 second
                             next_ob, reward, done, info = step_hardware(env, joint_command)
-
                             current_state = env.dclaw_dof_pos.cpu().numpy()
                             sim_states.append(current_state)
 
                         if PLOT_FIGURES:
-                            timesteps = np.arange(0, 1 + 2, 1.0/12.0)
+                            timesteps = np.arange(0, 1 + 8, 1.0/12.0)
                             sim_states = np.array(sim_states)
+
+                            hardware_steps = signals[actuator]["hardware_joint_states"][signal_type][f"{amplitude}_{freq}"]["positions"]
+                            hardware_traj = hardware_steps
                             
                             for sim_num in range(env.num_envs):
 
                                 stiffness_index = sim_num // grid_size
                                 damping_index = sim_num % grid_size
 
-                                print(f"ENVIRONMENT : {sim_num}")
+                                # print(f"ENVIRONMENT : {sim_num}")
                                 stiffness = stiffness_array[stiffness_index]
                                 damping = damping_array[damping_index]
 
-                                plt.figure()
-                                plt.plot(timesteps, downsample(signal), "--", label="Commanded Signal")
-                                plt.plot(timesteps, sim_states[:, sim_num, index], label=f"Simulator #{sim_num} Trajectory")
+                                panel = {}
+                                panel["timesteps"] = timesteps
+                                panel["commanded_signal"] = signal
+                                panel["hardware_traj"] = hardware_traj
+                                panel["simulator_traj"] = sim_states[:, sim_num, index]
+                                panel["xlabel"] = "Time (s)"
+                                panel["ylabel"] = "Position (in radian)"
+                                panel["title"] = f"Finger Index : {actuator}, Signal type : {signal_type}, Amplitude :{amplitude}, Freq : {freq} \n stiffness:{stiffness}, damping:{damping}"
+
+                                panels.append(panel)
+
+                                # plt.figure()
+                                # plt.plot(timesteps, downsample(signal), "--", label="Commanded Signal")
+                                # plt.plot(timesteps, hardware_traj, label="Hardware trajectory")
+                                # plt.plot(timesteps, sim_states[:, sim_num, index], label=f"Simulator #{sim_num} Trajectory")
                                 
-                                plt.xlabel("Time (s)")
-                                plt.ylabel("Position (in radian)")
+                                # plt.xlabel("Time (s)")
+                                # plt.ylabel("Position (in radian)")
 
-                                plt.title(f"Finger Index : {actuator}, Signal type : {signal_type}, Amplitude :{amplitude}, \n stiffness:{stiffness}, damping:{damping}")
-                                plt.legend()
+                                # plt.title(f"Finger Index : {actuator}, Signal type : {signal_type}, Amplitude :{amplitude}, Freq : {freq} \n stiffness:{stiffness}, damping:{damping}")
+                                # plt.legend()
 
-                                plt.show()
-                                plt.close()
+                                # plt.show()
+                                # plt.close()
 
-                        signals[actuator]["simulator_joint_states"][signal_type][f"{amplitude}"]["positions"] = np.array(sim_states)
+                        signals[actuator]["simulator_joint_states"][signal_type][f"{amplitude}_{freq}"]["positions"] = np.array(sim_states)
 
-                elif signal_type == "sinusoidal":
-                    for amplitude in amplitudes:
-                        for freq in frequencies:
-                            
-                            print(f"Finger Index : {actuator}, Signal type : {signal_type}, Amplitude :{amplitude}, Freq : {freq}")
+        if PLOT_FIGURES:
+            nrows, ncols = 4, 3
+            figsize=(18, 14)
 
-                            signal = signals[actuator]["input_joint_commands"][signal_type][f"{amplitude}_{freq}"]
-                            signals[actuator]["simulator_joint_states"][signal_type][f"{amplitude}_{freq}"] = {}
-                            
-                            send_dclaw_home()
+            fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
 
-                            sim_states = []
-                            for t in range(0, len(signal), 2):
-                                # print(t)
-                                joint_command = torch.zeros(act_dim, device=env.device)
-                                for env_index in range(env.num_envs):
-                                    joint_command[index + env_index * 12] = signal[t]
-                                # print("joint command :", joint_command)
+            for i in range(nrows * ncols):
+                print(f"PANEL : {i}")
+                panel = panels[i]
 
-                                # Send command to step the simulator for 1/12.0 second
-                                next_ob, reward, done, info = step_hardware(env, joint_command)
-                                current_state = env.dclaw_dof_pos.cpu().numpy()
-                                sim_states.append(current_state)
+                timesteps = panel["timesteps"]
+                commanded_signal = panel["commanded_signal"]
+                hardware_traj = panel["hardware_traj"]
+                simulator_traj = panel["simulator_traj"]
+                xlabel = panel["xlabel"]
+                ylabel = panel["ylabel"]
+                title = panel["title"]
 
-                            if PLOT_FIGURES:
-                                timesteps = np.arange(0, 1 + 8, 1.0/12.0)
-                                sim_states = np.array(sim_states)
-                                
-                                for sim_num in range(env.num_envs):
+                row = i // ncols
+                col = i % ncols
 
-                                    stiffness_index = sim_num // grid_size
-                                    damping_index = sim_num % grid_size
+                axes[row, col].plot(timesteps, commanded_signal, label="Commanded Signal")
+                axes[row, col].plot(timesteps, hardware_traj, label="Hardware Trajectory")
+                axes[row, col].plot(timesteps, simulator_traj, label="Simulator Trajectory")
+                axes[row, col].set_xlabel(xlabel)
+                axes[row, col].set_ylabel(ylabel)
+                axes[row, col].set_title(title)
 
-                                    print(f"ENVIRONMENT : {sim_num}")
-                                    stiffness = stiffness_array[stiffness_index]
-                                    damping = damping_array[damping_index]
-
-                                    plt.figure()
-                                    plt.plot(timesteps, downsample(signal), "--", label="Commanded Signal")
-                                    plt.plot(timesteps, sim_states[:, sim_num, index], label=f"Simulator #{sim_num} Trajectory")
-                                    
-                                    plt.xlabel("Time (s)")
-                                    plt.ylabel("Position (in radian)")
-
-                                    plt.title(f"Finger Index : {actuator}, Signal type : {signal_type}, Amplitude :{amplitude}, Freq : {freq} \n stiffness:{stiffness}, damping:{damping}")
-                                    plt.legend()
-
-                                    plt.show()
-                                    plt.close()
-
-                            signals[actuator]["simulator_joint_states"][signal_type][f"{amplitude}_{freq}"]["positions"] = np.array(sim_states)
+            plt.tight_layout()
+            plt.show()
+            plt.close()
 
     t1 = time.perf_counter()
     elapsed_time = t1 - t0
     print(elapsed_time)
 
     # Store the full dictionary
-    with open("sys_id_sim_hardware_dict.pkl", "wb") as f:
+    with open("sys_id_sim_hardware_dict_NEW_42.pkl", "wb") as f:
         pickle.dump(signals, f)
 
 def downsample(old_signal):
