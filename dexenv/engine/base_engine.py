@@ -83,7 +83,7 @@ class BaseEngine:
         else:
             if self.cfg.alg.pretrain_model is not None:
                 print(f"PRETRAINED MODEL PATH: {self.cfg.alg.pretrain_model}", flush=True)
-                self.agent.load_model(pretrain_model=self.cfg.alg.pretrain_model)
+                self.cur_step = self.agent.load_model(pretrain_model=self.cfg.alg.pretrain_model)
                 print("MODEL LOADED!", flush=True)
 
     def train(self, **kwargs):

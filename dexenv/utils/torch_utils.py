@@ -336,7 +336,7 @@ def detach_tensors(tensor):
 
 
 def load_torch_model(model_file):
-    logger.info(f'Loading model from {model_file}')
+    logger.info(f'Loading model from PATH : {model_file}')
     if isinstance(model_file, str):
         model_file = Path(model_file)
     if not model_file.exists():
