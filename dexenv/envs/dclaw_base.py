@@ -199,6 +199,10 @@ class DClawBase(VecTask):
         self.cfg.env.numObservations = self.num_observations
         self.create_ob_act_space()
 
+        self.max_delay = 2 # delay is this number - 1 timesteps
+        self.actions_buffer = torch.zeros(self.num_envs, self.max_delay, self.num_actions, device=self.device)
+        self.delays = torch.randint(0, self.max_delay, (self.num_envs,), device=self.device)
+
     def create_sim(self):
         self.dt = self.cfg["sim"]["dt"]
         self.up_axis_idx = self.set_sim_params_up_axis(self.sim_params, self.up_axis)
@@ -842,6 +846,7 @@ class DClawBase(VecTask):
         self.progress_buf[env_ids] = 0
         self.reset_buf[env_ids] = 0
         self.successes[env_ids] = 0
+        self.actions_buffer[env_ids] = torch.zeros(self.max_delay, self.num_actions, device=self.device)
 
     def get_numpy_rgb_images(self, camera_handles):
         rgb_obs_buf = []
@@ -871,8 +876,11 @@ class DClawBase(VecTask):
 
         if len(env_ids) > 0:
             self.reset_idx(env_ids, goal_env_ids)
-
-        self.actions = actions.clone().to(self.device)
+        
+        # self.actions = actions.clone().to(self.device)
+        self.actions_buffer = self.actions_buffer.roll(-1, dims=1)
+        self.actions_buffer[:, self.delays] = actions.clone()
+        self.actions = self.actions_buffer[:, 0].clone()
 
         if self.cfg.env.action_ema is not None:
             self.action_ema_val[env_ids] = 0
