@@ -175,19 +175,26 @@ class PPOAgent:
                    eval=eval)
 
     def load_model(self, pretrain_model=None, eval=False):
-        # ckpt_data = load_ckpt_data(self.cfg.resume_id,
-        #                            project_name=self.cfg.logging.wandb.project,
-        #                            pretrain_model=pretrain_model, eval=eval)
-        ckpt_data = load_ckpt_data(wandb_run_id=None,
-                                   pretrain_model=pretrain_model, 
-                                   eval=False)
+
+        use_offline_model = False
+        if use_offline_model:        
+            ckpt_data = load_ckpt_data(wandb_run_id=None,
+                                       pretrain_model=pretrain_model, 
+                                       eval=False)
+        else:
+            ckpt_data = load_ckpt_data(self.cfg.resume_id,
+                                       project_name=self.cfg.logging.wandb.project,
+                                       pretrain_model=pretrain_model, eval=eval)
 
         load_state_dict(self.actor,
                         ckpt_data.get('actor_state_dict', dict()))
         load_state_dict(self.critic,
                         ckpt_data.get('critic_state_dict', dict()))
-        # if pretrain_model is not None:
-        #     return ckpt_data['step']
+        
+        if not use_offline_model:
+            if pretrain_model is not None:
+                return ckpt_data['step']
+        
         if self.cfg.resume_optim and not self.cfg.test:
             self.optimizer.load_state_dict(ckpt_data['optim_state_dict'])
         logger.info(f"Checkpoint step:{ckpt_data['step']}")
