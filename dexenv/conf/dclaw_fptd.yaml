@@ -22,6 +22,7 @@ alg:
   sto_eval: False
   sample_action: True
   lr: 0.0003
+  pretrain_model: /workspace/dexenv/dexenv/pretrained/artifacts/student/train-model.pt
 
 task:
   env:
