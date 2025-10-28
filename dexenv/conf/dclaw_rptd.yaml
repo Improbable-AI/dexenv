@@ -6,7 +6,8 @@ defaults:
 alg:
   env_name: DclawRealPTD
   batch_size: 20
-  num_envs: 260
+  num_envs: 60
+  # pretrain_model: /workspace/dexenv/dexenv/pretrained/artifacts/student/train-model.pt
 
 task:
   env:

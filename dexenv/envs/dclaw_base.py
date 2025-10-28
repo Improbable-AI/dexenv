@@ -200,9 +200,9 @@ class DClawBase(VecTask):
         self.create_ob_act_space()
 
         #### DELAY CODE
-        self.max_delay = 2 # delay is this number - 1 timesteps
-        self.actions_buffer = torch.zeros(self.num_envs, self.max_delay, self.num_actions, device=self.device)
-        self.delays = torch.randint(0, self.max_delay, (self.num_envs,), device=self.device)
+        # self.max_delay = 2 # delay is this number - 1 timesteps
+        # self.actions_buffer = torch.zeros(self.num_envs, self.max_delay, self.num_actions, device=self.device)
+        # self.delays = torch.randint(0, self.max_delay, (self.num_envs,), device=self.device)
 
     def create_sim(self):
         self.dt = self.cfg["sim"]["dt"]
@@ -214,7 +214,7 @@ class DClawBase(VecTask):
 
         if self.randomize:
             self.apply_randomizations(self.randomization_params)
-
+        
     def _create_ground_plane(self):
         plane_params = gymapi.PlaneParams()
         plane_params.normal = gymapi.Vec3(0.0, 0.0, 1.0)
@@ -337,17 +337,31 @@ class DClawBase(VecTask):
 
     def create_camera(self, camera_poses, env_ptr, camera_params):
         cam_handles = []
+        demo_camera = False
+
         print("CREATING CAMERA", flush=True)
         for ic in range(min(len(camera_poses), self.cfg.cam.cam_num)):
             camera_handle = self.gym.create_camera_sensor(env_ptr, camera_params)
+            
+            if demo_camera:
+                rgb_camera_handle = self.gym.create_camera_sensor(env_ptr, camera_params)
             print(f"IC {ic} camera handle created", flush=True)
             if isinstance(camera_poses[ic], tuple):
                 self.gym.set_camera_location(camera_handle, env_ptr, camera_poses[ic][0], camera_poses[ic][1])
                 print(f"SET CAMERA", flush=True)
             else:
                 self.gym.set_camera_transform(camera_handle, env_ptr, camera_poses[ic])
+                
+                if demo_camera:
+                    camera_poses[0].p.z += 0.2
+                    camera_poses[0].p.x += 0.25
+                    self.gym.set_camera_transform(rgb_camera_handle, env_ptr, camera_poses[ic])
                 print(f"SET CAMERA TRANSFORM", flush=True)
             cam_handles.append(camera_handle)
+            
+            if demo_camera:
+                self.render_rgb_camera_handle = rgb_camera_handle
+
         return cam_handles
 
     def get_visual_render_camera_setup(self):
@@ -849,7 +863,7 @@ class DClawBase(VecTask):
         self.successes[env_ids] = 0
 
         #### DELAY CODE
-        self.actions_buffer[env_ids] = torch.zeros(self.max_delay, self.num_actions, device=self.device)
+        # self.actions_buffer[env_ids] = torch.zeros(self.max_delay, self.num_actions, device=self.device)
 
     def get_numpy_rgb_images(self, camera_handles):
         rgb_obs_buf = []
@@ -880,12 +894,11 @@ class DClawBase(VecTask):
         if len(env_ids) > 0:
             self.reset_idx(env_ids, goal_env_ids)
         
-        # self.actions = actions.clone().to(self.device)
-        
+        self.actions = actions.clone().to(self.device)
         #### DELAY CODE
-        self.actions_buffer = self.actions_buffer.roll(-1, dims=1)
-        self.actions_buffer[:, self.delays] = actions.clone()
-        self.actions = self.actions_buffer[:, 0].clone()
+        # self.actions_buffer = self.actions_buffer.roll(-1, dims=1)
+        # self.actions_buffer[:, self.delays] = actions.clone()
+        # self.actions = self.actions_buffer[:, 0].clone()
 
         if self.cfg.env.action_ema is not None:
             self.action_ema_val[env_ids] = 0

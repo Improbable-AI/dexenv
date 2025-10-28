@@ -13,6 +13,7 @@ alg:
   batch_size: 1
   train_rollout_steps: 60
   opt_epochs: 2
+  pretrain_model: "/workspace/dexenv/dexenv/pretrained/artifacts/student/distilled-roller-old-sysid-v1.pt" # "/workspace/dexenv/dexenv/pretrained/artifacts/student/duck-distilled-model-v1.pt"
 
 logging:
   wandb:

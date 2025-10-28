@@ -176,8 +176,8 @@ class PPOAgent:
 
     def load_model(self, pretrain_model=None, eval=False):
 
-        use_offline_model = False
-        if use_offline_model:        
+        use_offline_model = pretrain_model is not None
+        if use_offline_model:
             ckpt_data = load_ckpt_data(wandb_run_id=None,
                                        pretrain_model=pretrain_model, 
                                        eval=False)
