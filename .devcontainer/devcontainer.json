@@ -1,0 +1,23 @@
+{
+    "name": "DexEnv",
+    "image": "improbableailab/dexenv:latest",
+    "runArgs": [
+      "--env=DISPLAY",
+      "--env=QT_X11_NO_MITSHM=1",
+      "--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw",
+      "--volume=/home/anoop/projects/:/workspace/",
+      "--gpus=all",
+      "--env=NVIDIA_DRIVER_CAPABILITIES=all",
+      "--env=NVIDIA_VISIBLE_DEVICES=all",
+      "--net=host"
+    ],
+    "workspaceFolder": "/workspace/",
+    "extensions": [
+      "ms-python.python",
+      "ms-vscode.cpptools" // Add whatever you use
+    ],
+    "postCreateCommand": "/workspace/dexenv/docker/entrypoint.sh",
+    "settings": {
+      "terminal.integrated.defaultProfile.linux": "bash"
+    }
+}
